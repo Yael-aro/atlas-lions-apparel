@@ -45,7 +45,7 @@ const Panier = () => {
       alert("Veuillez remplir toutes les informations de livraison");
       return;
     }
-    const whatsappUrl = `https://wa.me/212600000000?text=${generateWhatsAppMessage()}`;
+    const whatsappUrl = `https://wa.me/212624740054?text=${generateWhatsAppMessage()}`;
     window.open(whatsappUrl, '_blank');
   };
 

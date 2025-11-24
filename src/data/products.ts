@@ -1,8 +1,6 @@
 // ============================================
 // FICHIER CENTRALISÉ - TOUS LES PRODUITS
 // ============================================
-// Modifie ce fichier pour ajouter/modifier des produits
-// Les changements seront reflétés partout (Index + Boutique)
 
 import jerseyImage from "@/assets/jersey-red.jpg";
 import accessoriesImage from "@/assets/accessories.jpg";
@@ -12,6 +10,21 @@ import siffletImage from "@/assets/sifflet.jpg";
 import backImage from "@/assets/back.jpg";
 import flagImage from "@/assets/flag.jpg";
 import MinatureImage from "@/assets/minature.jpg";
+import jerseyWhiteImage from "@/assets/jerseyWhiteImage.jpg";
+import backWhiteImage from "@/assets/backWhiteImage.jpg";
+import shortWhiteImage from "@/assets/short-white.jpg";
+import biriaImage from "@/assets/biria.jpg";
+import biria1Image from "@/assets/biria1.jpg";
+// ✅ AJOUTE l'import pour le short blanc ici :
+
+
+// Type pour les variantes de couleur
+export interface ColorVariant {
+  color: string;
+  colorName: string;
+  image: string;
+  images?: string[];
+}
 
 export interface Product {
   id: string;
@@ -21,23 +34,44 @@ export interface Product {
   images?: string[];
   category: string;
   customizable?: boolean;
-  featured?: boolean; // true = apparaît sur la page d'accueil
+  featured?: boolean;
+  hasColorVariants?: boolean;
+  colorVariants?: ColorVariant[];
 }
 
 export const products: Product[] = [
   // ============================================
-  // PACKS
+  // MAILLOTS
   // ============================================
   {
     id: "1",
-    name: "Tenue Maroc Premium",
+    name: "Maillot Maroc Premium",
     price: 280,
     image: jerseyImage,
     images: [jerseyImage, backImage],
-    category: "Pack",
+    category: "Maillot",
     customizable: true,
-    featured: true, // ✅ Apparaît sur la page d'accueil
+    featured: true,
+    hasColorVariants: true,
+    colorVariants: [
+      {
+        color: "#C8102E", // Rouge
+        colorName: "Rouge",
+        image: jerseyImage,
+        images: [jerseyImage, backImage],
+      },
+      {
+        color: "#FFFFFF", // Blanc
+        colorName: "Blanc",
+        image: jerseyWhiteImage,
+        images: [jerseyWhiteImage, backWhiteImage],
+      },
+    ],
   },
+
+  // ============================================
+  // PACKS
+  // ============================================
   {
     id: "2",
     name: "Pack Complet Supporter",
@@ -46,14 +80,14 @@ export const products: Product[] = [
     images: [
       MinatureImage,
       jerseyImage,
-      accessoriesImage,
+      biria1Image,
       flagImage,
       echapeImage,
       siffletImage,
     ],
     category: "Pack",
     customizable: false,
-    featured: true, // ✅ Apparaît sur la page d'accueil
+    featured: true,
   },
 
   // ============================================
@@ -67,6 +101,21 @@ export const products: Product[] = [
     category: "Short",
     customizable: false,
     featured: false,
+    hasColorVariants: true, // ✅ NOUVEAU - Active le sélecteur de couleur
+    colorVariants: [
+      {
+        color: "#C8102E", // Rouge
+        colorName: "Rouge",
+        image: ShortImage,
+        images: [ShortImage],
+      },
+      {
+        color: "#FFFFFF", // Blanc
+        colorName: "Blanc",
+        image: shortWhiteImage, // ⚠️ Temporaire - remplace par shortWhiteImage quand tu as l'image
+        images: [shortWhiteImage], // ⚠️ Temporaire
+      },
+    ],
   },
 
   // ============================================
@@ -88,7 +137,7 @@ export const products: Product[] = [
     image: accessoriesImage,
     category: "Accessoires",
     customizable: false,
-    featured: true, // ✅ Apparaît sur la page d'accueil
+    featured: true,
   },
   {
     id: "6",
@@ -99,34 +148,38 @@ export const products: Product[] = [
     customizable: false,
     featured: false,
   },
+    {
+    id: "7",
+    name: "Chapeau Bob ",
+    price: 70,
+    image: biria1Image,
+    category: "Accessoires",
+    customizable: false,
+    featured: false,
+  },
 ];
 
 // ============================================
 // FONCTIONS UTILITAIRES
 // ============================================
 
-// Récupère les produits vedettes (pour la page d'accueil)
 export const getFeaturedProducts = (): Product[] => {
   return products.filter((product) => product.featured);
 };
 
-// Récupère tous les produits (pour la boutique)
 export const getAllProducts = (): Product[] => {
   return products;
 };
 
-// Récupère un produit par son ID
 export const getProductById = (id: string): Product | undefined => {
   return products.find((product) => product.id === id);
 };
 
-// Filtre les produits par catégorie
 export const getProductsByCategory = (category: string): Product[] => {
   if (category === "Tous") return products;
   return products.filter((product) => product.category === category);
 };
 
-// Récupère toutes les catégories uniques
 export const getCategories = (): string[] => {
   const categories = products.map((p) => p.category);
   return ["Tous", ...Array.from(new Set(categories))];

@@ -4,34 +4,51 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Sparkles, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
+import type { ColorVariant } from "@/data/products";
 
 interface ProductCardProps {
   id: string;
   name: string;
   price: number;
   image: string;
-  images?: string[]; // ✅ NOUVEAU - Support pour plusieurs images
+  images?: string[];
   category: string;
   customizable?: boolean;
+  hasColorVariants?: boolean;
+  colorVariants?: ColorVariant[];
 }
 
-export const ProductCard = ({ id, name, price, image, images, category, customizable }: ProductCardProps) => {
+export const ProductCard = ({ 
+  id, 
+  name, 
+  price, 
+  image, 
+  images, 
+  category, 
+  customizable,
+  hasColorVariants,
+  colorVariants 
+}: ProductCardProps) => {
   const { addToCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0); // ✅ NOUVEAU - Index de la couleur sélectionnée
 
-  // Utiliser le tableau d'images s'il existe, sinon utiliser l'image unique
-  const imageList = images && images.length > 0 ? images : [image];
+  // ✅ NOUVEAU - Utilise les images de la couleur sélectionnée si disponible
+  const currentVariant = hasColorVariants && colorVariants ? colorVariants[selectedColorIndex] : null;
+  const imageList = currentVariant?.images || images || [currentVariant?.image || image];
   const hasMultipleImages = imageList.length > 1;
 
   const handleAddToCart = () => {
     setIsAdding(true);
     
+    const selectedColor = currentVariant?.colorName || undefined;
+    
     addToCart({
       id,
-      name,
+      name: selectedColor ? `${name} - ${selectedColor}` : name,
       price,
-      image: imageList[0], // Utiliser la première image pour le panier
+      image: imageList[0],
       category,
       customizable,
     });
@@ -57,17 +74,23 @@ export const ProductCard = ({ id, name, price, image, images, category, customiz
     setCurrentImageIndex(index);
   };
 
+  // ✅ NOUVEAU - Gère le changement de couleur
+  const handleColorChange = (index: number) => {
+    setSelectedColorIndex(index);
+    setCurrentImageIndex(0); // Reset à la première image
+  };
+
   return (
     <Card className="group overflow-hidden hover:shadow-elegant transition-smooth border-border">
       <div className="relative overflow-hidden aspect-square">
-        {/* Image avec transition */}
+        {/* Image */}
         <img 
           src={imageList[currentImageIndex]} 
           alt={`${name} - Image ${currentImageIndex + 1}`}
           className="object-cover w-full h-full group-hover:scale-110 transition-smooth"
         />
 
-        {/* Flèches de navigation (seulement si plusieurs images) */}
+        {/* Flèches de navigation */}
         {hasMultipleImages && (
           <>
             <button
@@ -85,7 +108,7 @@ export const ProductCard = ({ id, name, price, image, images, category, customiz
               <ChevronRight className="h-4 w-4" />
             </button>
 
-            {/* Indicateurs de pagination (points) */}
+            {/* Indicateurs de pagination */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
               {imageList.map((_, index) => (
                 <button
@@ -106,9 +129,11 @@ export const ProductCard = ({ id, name, price, image, images, category, customiz
             </div>
 
             {/* Compteur d'images */}
-            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-              {currentImageIndex + 1}/{imageList.length}
-            </div>
+            {hasMultipleImages && (
+              <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                {currentImageIndex + 1}/{imageList.length}
+              </div>
+            )}
           </>
         )}
 
@@ -126,6 +151,45 @@ export const ProductCard = ({ id, name, price, image, images, category, customiz
       
       <CardContent className="p-4">
         <h3 className="font-semibold text-lg mb-2">{name}</h3>
+        
+        {/* ✅ NOUVEAU - Sélecteur de couleur */}
+        {hasColorVariants && colorVariants && (
+          <div className="mb-3">
+            <p className="text-xs text-muted-foreground mb-2">Couleur :</p>
+            <div className="flex gap-2">
+              {colorVariants.map((variant, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleColorChange(index);
+                  }}
+                  className={`relative w-8 h-8 rounded-full border-2 transition-all ${
+                    index === selectedColorIndex
+                      ? "border-primary scale-110 shadow-md"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  style={{ backgroundColor: variant.color }}
+                  title={variant.colorName}
+                >
+                  {index === selectedColorIndex && (
+                    <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow-md" />
+                  )}
+                  {/* Bordure noire pour le blanc */}
+                  {variant.color === "#FFFFFF" && (
+                    <div className="absolute inset-0 rounded-full border border-gray-300" />
+                  )}
+                </button>
+              ))}
+            </div>
+            {colorVariants[selectedColorIndex] && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {colorVariants[selectedColorIndex].colorName}
+              </p>
+            )}
+          </div>
+        )}
+        
         <p className="text-2xl font-bold text-primary">{price} DH</p>
       </CardContent>
       

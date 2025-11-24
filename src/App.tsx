@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext.tsx"; // ✅ AJOUTÉ
 import Index from "./pages/Index";
 import Boutique from "./pages/Boutique";
@@ -23,7 +23,7 @@ const App = () => (
       <CartProvider> {/* ✅ AJOUTÉ - Enveloppe toute l'app */}
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <HashRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/boutique" element={<Boutique />} />
@@ -36,7 +36,7 @@ const App = () => (
             <Route path="/conditions" element={<Conditions />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
       </CartProvider>
     </TooltipProvider>
   </QueryClientProvider>
