@@ -14,6 +14,7 @@ import FAQ from "./pages/FAQ";
 import Livraison from "./pages/Livraison";
 import Conditions from "./pages/Conditions";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from '@/pages/AdminDashboard';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/livraison" element={<Livraison />} />
             <Route path="/conditions" element={<Conditions />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </HashRouter>
       </CartProvider>

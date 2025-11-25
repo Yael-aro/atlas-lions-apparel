@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -5,15 +6,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Minus, Plus, ShoppingBag, MessageCircle, Mail, ArrowLeft } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 
 const Panier = () => {
-  const { items, totalPrice, updateQuantity, removeFromCart, updateSize } = useCart();
+  const { items, totalPrice, updateQuantity, removeFromCart, updateSize, clearCart } = useCart();
 
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -22,31 +24,127 @@ const Panier = () => {
     city: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const shipping = 40;
   const total = totalPrice + shipping;
 
-  const generateWhatsAppMessage = () => {
-    const message = `🛒 Nouvelle commande CAN 2025\n\n` +
-      `📦 Produits:\n${items.map(item => 
-        `- ${item.name} (Taille: ${item.size || "M"})\n  ${item.customization ? `Personnalisation: ${item.customization}\n  ` : ""}Quantité: ${item.quantity}\n  Prix: ${item.price * item.quantity} DH`
-      ).join('\n\n')}\n\n` +
-      `👤 Informations client:\n` +
-      `Nom: ${customerInfo.name}\n` +
-      `Téléphone: ${customerInfo.phone}\n` +
-      `Adresse: ${customerInfo.address}\n` +
-      `Ville: ${customerInfo.city}\n\n` +
-      `💰 Total: ${total} DH (Livraison incluse)`;
-    
-    return encodeURIComponent(message);
-  };
-
-  const handleWhatsAppOrder = () => {
+  // ✅ FONCTION POUR ENVOYER AU BACKEND
+  const handleSubmitOrder = async () => {
+    // Validation
     if (!customerInfo.name || !customerInfo.phone || !customerInfo.address || !customerInfo.city) {
-      alert("Veuillez remplir toutes les informations de livraison");
+      toast.error("Veuillez remplir toutes les informations de livraison");
       return;
     }
-    const whatsappUrl = `https://wa.me/212624740054?text=${generateWhatsAppMessage()}`;
-    window.open(whatsappUrl, '_blank');
+
+    if (items.length === 0) {
+      toast.error("Votre panier est vide");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Pour chaque article du panier, créer une commande
+      const orderPromises = items.map(async (item) => {
+        // Créer les données de personnalisation adaptées pour le backend
+        const personalizationData = {
+          id: `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: Date.now(),
+          jerseyColor: item.category === "Maillot" ? "red" : "white", // Adapter selon ton besoin
+          name: {
+            enabled: !!item.customization,
+            text: item.customization || item.name,
+            font: "montserrat",
+            color: "gold",
+            position: { x: 50, y: 35 }
+          },
+          number: {
+            enabled: false,
+            text: "",
+            font: "montserrat",
+            color: "gold",
+            position: { x: 50, y: 50 }
+          },
+          slogan: {
+            enabled: false,
+            text: "",
+            font: "montserrat",
+            color: "gold",
+            size: "medium",
+            position: { x: 50, y: 65 }
+          },
+          selectedPosition: "back",
+          // Informations spécifiques au panier
+          productName: item.name,
+          productCategory: item.category,
+          quantity: item.quantity,
+          size: item.size || "M",
+          unitPrice: item.price,
+          totalPrice: item.price * item.quantity,
+          previewImage: item.image
+        };
+
+        // Envoyer au backend
+        const response = await fetch('http://localhost:8000/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            personalizationData,
+            customerInfo: {
+              name: customerInfo.name,
+              phone: customerInfo.phone,
+              address: customerInfo.address,
+              city: customerInfo.city
+            }
+          })
+        });
+
+        return response.json();
+      });
+
+      // Attendre toutes les requêtes
+      const results = await Promise.all(orderPromises);
+
+      // Vérifier que toutes ont réussi
+      const allSuccessful = results.every(result => result.success);
+
+      if (allSuccessful) {
+        const orderNumbers = results.map(r => r.orderNumber).join(', ');
+        
+        toast.success(`✅ Commande(s) enregistrée(s) avec succès !`, {
+          description: `Numéros: ${orderNumbers}`,
+          duration: 5000
+        });
+
+        // Vider le panier
+        clearCart();
+
+        // Réinitialiser le formulaire
+        setCustomerInfo({
+          name: "",
+          phone: "",
+          address: "",
+          city: "",
+        });
+
+        // Message de suivi
+        setTimeout(() => {
+          toast.info("📦 Vous recevrez une confirmation par téléphone", {
+            duration: 5000
+          });
+        }, 1500);
+
+      } else {
+        toast.error("❌ Erreur lors de l'enregistrement de certaines commandes");
+      }
+
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error("❌ Impossible de contacter le serveur");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -106,7 +204,7 @@ const Panier = () => {
                             </Button>
                           </div>
 
-                          {/* ✅ NOUVEAU - Sélecteur de taille avec boutons */}
+                          {/* Sélecteur de taille avec boutons */}
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">Taille:</span>
                             <div className="flex gap-1">
@@ -149,7 +247,6 @@ const Panier = () => {
                               </Button>
                             </div>
 
-                            {/* ✅ CORRIGÉ - Prix × quantité */}
                             <div className="text-right">
                               <p className="text-xl font-bold text-primary">
                                 {item.price * item.quantity} DH
@@ -181,17 +278,17 @@ const Panier = () => {
                         id="name"
                         value={customerInfo.name}
                         onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                        placeholder="Votre nom ici"
+                        placeholder="Votre nom complet"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Téléphone WhatsApp *</Label>
+                      <Label htmlFor="phone">Téléphone *</Label>
                       <Input
                         id="phone"
                         value={customerInfo.phone}
                         onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                        placeholder="+212 6XX XXX XXX"
+                        placeholder="06 XX XX XX XX"
                       />
                     </div>
 
@@ -250,29 +347,37 @@ const Panier = () => {
                       </div>
                     </div>
 
+                    {/* ✅ BOUTON COMMANDER (Backend) */}
                     <div className="space-y-2 pt-4">
                       <Button 
                         className="w-full shadow-elegant" 
                         size="lg"
-                        onClick={handleWhatsAppOrder}
+                        onClick={handleSubmitOrder}
+                        disabled={isSubmitting}
                       >
-                        <MessageCircle className="mr-2 h-5 w-5" />
-                        Commander via WhatsApp
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="w-full" 
-                        size="lg"
-                      >
-                        <Mail className="mr-2 h-5 w-5" />
-                        Commander via Email
+                        <Package className="mr-2 h-5 w-5" />
+                        {isSubmitting ? "⏳ Envoi en cours..." : "Confirmer la commande"}
                       </Button>
                     </div>
 
                     <p className="text-xs text-muted-foreground text-center">
                       Paiement sécurisé à la livraison ou par virement bancaire
                     </p>
+                  </CardContent>
+                </Card>
+
+                {/* Info supplémentaire */}
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold mb-2 text-blue-800 text-sm">
+                      📦 Livraison rapide
+                    </h3>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                      <li>✓ Livraison sous 2-5 jours ouvrés</li>
+                      <li>✓ Paiement à la livraison disponible</li>
+                      <li>✓ Suivi de commande par téléphone</li>
+                      <li>✓ Service client réactif</li>
+                    </ul>
                   </CardContent>
                 </Card>
               </div>

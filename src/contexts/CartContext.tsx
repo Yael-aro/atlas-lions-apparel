@@ -22,7 +22,7 @@ interface CartContextType {
   addToCart: (product: Omit<CartItem, "quantity">, size?: string, customization?: string) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  updateSize: (id: string, size: string) => void; // ✅ NOUVEAU
+  updateSize: (id: string, size: string) => void;
   clearCart: () => void;
 }
 
@@ -33,23 +33,15 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Calculer le nombre total d'articles
   const cartCount = items.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = items.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // Calculer le prix total
-  const totalPrice = items.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-
-  // Ajouter un produit au panier
   const addToCart = (
     product: Omit<CartItem, "quantity">,
     size?: string,
     customization?: string
   ) => {
     setItems((currentItems) => {
-      // Vérifier si le produit existe déjà avec les mêmes options
       const existingItemIndex = currentItems.findIndex(
         (item) =>
           item.id === product.id &&
@@ -58,7 +50,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (existingItemIndex > -1) {
-        // Incrémenter la quantité
         const updatedItems = [...currentItems];
         updatedItems[existingItemIndex].quantity += 1;
 
@@ -70,7 +61,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return updatedItems;
       }
 
-      // Ajouter le nouveau produit
       toast.success(`${product.name} ajouté au panier !`, {
         description: `${product.price} DH`,
         duration: 2000,
@@ -88,7 +78,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Supprimer un produit du panier
   const removeFromCart = (id: string) => {
     setItems((currentItems) => {
       const item = currentItems.find((i) => i.id === id);
@@ -99,7 +88,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Mettre à jour la quantité
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
@@ -113,7 +101,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  // ✅ NOUVEAU - Mettre à jour la taille
   const updateSize = (id: string, size: string) => {
     setItems((currentItems) =>
       currentItems.map((item) =>
@@ -123,7 +110,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     toast.success(`Taille mise à jour: ${size}`, { duration: 1500 });
   };
 
-  // Vider le panier
   const clearCart = () => {
     setItems([]);
     toast.info("Panier vidé");
@@ -138,8 +124,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
-        updateSize, // ✅ NOUVEAU
-        clearCart,
+        updateSize,
+        clearCart, // ✅ ajouté ici
       }}
     >
       {children}
@@ -150,7 +136,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 // Hook personnalisé pour utiliser le panier
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useCart doit être utilisé dans un CartProvider");
   }
   return context;

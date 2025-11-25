@@ -17,7 +17,7 @@ import jerseyWhiteImage from "@/assets/jerseyWhiteImage.jpg";
 import backRedImage from "@/assets/back.jpg";
 import backWhiteImage from "@/assets/backWhiteImage.jpg";
 
-// ✅ Type pour les données de personnalisation complètes
+// Type pour les données de personnalisation complètes
 interface PersonalizationData {
   id: string;
   timestamp: number;
@@ -60,7 +60,7 @@ const Personnalisation = () => {
   const [selectedPosition, setSelectedPosition] = useState("back");
   const [jerseyColor, setJerseyColor] = useState("red");
   
-  // ✅ NOUVEAU - États pour le slogan
+  // États pour le slogan
   const [sloganEnabled, setSloganEnabled] = useState(false);
   const [sloganText, setSloganText] = useState("");
   const [sloganFont, setSloganFont] = useState("montserrat");
@@ -72,15 +72,18 @@ const Personnalisation = () => {
   const [numberPosition, setNumberPosition] = useState({ x: 50, y: 50 });
   const [sloganPosition, setSloganPosition] = useState({ x: 50, y: 65 });
   
-  // États drag & drop
   const [draggedElement, setDraggedElement] = useState<"text" | "number" | "slogan" | null>(null);
-  
-  // États zoom
   const [zoomLevel, setZoomLevel] = useState(1);
-  
-  // ✅ NOUVEAU - États de sauvegarde
   const [isSaved, setIsSaved] = useState(false);
   const [personalizationId, setPersonalizationId] = useState<string | null>(null);
+  
+  // ✅ États pour le formulaire client
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientCity, setClientCity] = useState('');
+  const [clientAddress, setClientAddress] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const previewRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -123,7 +126,6 @@ const Personnalisation = () => {
     },
   ];
 
-  // ✅ Tailles de slogan
   const sloganSizes = [
     { value: "small", label: "Petit", fontSize: "1rem" },
     { value: "medium", label: "Moyen", fontSize: "1.5rem" },
@@ -151,10 +153,10 @@ const Personnalisation = () => {
       : null;
   };
 
-  // Gestion du drag & drop pour tous les éléments
+  // Gestion du drag & drop
   const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
     setDraggedElement(element);
-    setIsSaved(false); // Marquer comme non sauvegardé
+    setIsSaved(false);
     e.preventDefault();
   };
 
@@ -210,7 +212,7 @@ const Personnalisation = () => {
     setSloganPosition({ x: 50, y: 65 });
   }, [selectedPosition]);
 
-  // Marquer comme non sauvegardé quand on modifie
+  // Marquer comme non sauvegardé
   useEffect(() => {
     setIsSaved(false);
   }, [customText, customNumber, selectedFont, selectedColor, jerseyColor, sloganEnabled, sloganText, sloganFont, sloganColor, sloganSize]);
@@ -220,11 +222,11 @@ const Personnalisation = () => {
     const basePrice = 180;
     const textPrice = customText ? 30 : 0;
     const numberPrice = customNumber ? 20 : 0;
-    const sloganPrice = sloganEnabled && sloganText ? 50 : 0; // ✅ +50 DH pour slogan
+    const sloganPrice = sloganEnabled && sloganText ? 50 : 0;
     return basePrice + textPrice + numberPrice + sloganPrice;
   };
 
-  // ✅ VALIDATION des données
+  // Validation
   const validatePersonalization = (): string | null => {
     if (!customText && !customNumber && (!sloganEnabled || !sloganText)) {
       return "Veuillez saisir au moins un nom, un numéro ou un slogan";
@@ -238,32 +240,26 @@ const Personnalisation = () => {
     return null;
   };
 
-  // ✅ CAPTURE de la prévisualisation
+  // Capture d'écran
   const capturePreview = async (): Promise<string> => {
-    // Pour capturer l'image, tu devras installer html2canvas:
-    // npm install html2canvas @types/html2canvas
-    
-    // Pour l'instant, retourne une capture simulée
-    // Quand tu installes html2canvas, décommente ce code:
-    
-    /*
-    const html2canvas = (await import('html2canvas')).default;
-    if (previewRef.current) {
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        backgroundColor: null,
-        logging: false,
-      });
-      return canvas.toDataURL('image/png');
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      if (previewRef.current) {
+        const canvas = await html2canvas(previewRef.current, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+        });
+        return canvas.toDataURL('image/png');
+      }
+    } catch (error) {
+      console.error('Erreur capture:', error);
     }
-    */
-    
     return "data:image/png;base64,preview-image-placeholder";
   };
 
-  // ✅ SAUVEGARDE de la personnalisation
+  // ✅ SAUVEGARDE
   const handleSavePersonalization = async () => {
-    // Validation
     const error = validatePersonalization();
     if (error) {
       toast.error(error, {
@@ -273,13 +269,9 @@ const Personnalisation = () => {
     }
 
     try {
-      // Générer un ID unique
       const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Capturer l'image de prévisualisation
       const previewImage = await capturePreview();
       
-      // Créer l'objet de données
       const data: PersonalizationData = {
         id,
         timestamp: Date.now(),
@@ -294,7 +286,7 @@ const Personnalisation = () => {
         number: {
           enabled: !!customNumber,
           text: customNumber,
-          font: selectedFont, // Même police que le nom
+          font: selectedFont,
           color: selectedColor,
           position: numberPosition,
         },
@@ -310,16 +302,8 @@ const Personnalisation = () => {
         previewImage,
       };
 
-      // Sauvegarder dans localStorage
       localStorage.setItem(`personalization-${id}`, JSON.stringify(data));
       
-      // ✅ Option: Envoyer au backend
-      // await fetch('/api/personalizations', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data)
-      // });
-
       setPersonalizationId(id);
       setIsSaved(true);
       
@@ -333,12 +317,91 @@ const Personnalisation = () => {
     }
   };
 
-  // ✅ AJOUT AU PANIER (seulement si sauvegardé)
-  const handleAddToCart = () => {
-    if (!isSaved) {
+  // ✅ OUVRIR LE FORMULAIRE CLIENT
+  const handleOrderNow = async () => {
+    if (!isSaved || !personalizationId) {
       toast.error("Veuillez d'abord enregistrer votre personnalisation", {
         icon: <AlertCircle className="h-4 w-4" />
       });
+      return;
+    }
+    
+    setShowClientForm(true);
+  };
+
+  // ✅ SOUMETTRE LA COMMANDE AU BACKEND
+  const submitOrder = async () => {
+    // Validation
+    if (!clientName || !clientPhone) {
+      toast.error("Nom et téléphone obligatoires");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const savedData = localStorage.getItem(`personalization-${personalizationId}`);
+      if (!savedData) {
+        toast.error("Données de personnalisation introuvables");
+        return;
+      }
+
+      const data: PersonalizationData = JSON.parse(savedData);
+      
+      // Envoyer au backend
+      const response = await fetch('http://localhost:8000/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          personalizationData: data,
+          customerInfo: {
+            name: clientName,
+            phone: clientPhone,
+            address: clientAddress,
+            city: clientCity
+          }
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(`✅ Commande ${result.orderNumber} enregistrée avec succès !`, {
+          duration: 5000
+        });
+        
+        // Fermer le modal
+        setShowClientForm(false);
+        
+        // Réinitialiser le formulaire
+        setClientName('');
+        setClientPhone('');
+        setClientCity('');
+        setClientAddress('');
+        
+        // Message de confirmation
+        setTimeout(() => {
+          toast.info("📦 Vous recevrez une confirmation par téléphone", {
+            duration: 5000
+          });
+        }, 1000);
+        
+      } else {
+        toast.error("❌ Erreur lors de l'enregistrement de la commande");
+      }
+      
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error("❌ Impossible de contacter le serveur");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Ajout au panier (optionnel)
+  const handleAddToCart = () => {
+    if (!isSaved) {
+      toast.error("Veuillez d'abord enregistrer votre personnalisation");
       return;
     }
 
@@ -371,7 +434,7 @@ const Personnalisation = () => {
               <h1 className="text-4xl md:text-5xl font-bold">Personnalisation Premium</h1>
             </div>
             <p className="text-xl text-white/90 text-center">
-              Créez votre maillot unique avec nom, numéro et slogan personnalisés
+              Créez votre maillot unique - Commande directe en ligne
             </p>
           </div>
         </section>
@@ -467,7 +530,7 @@ const Personnalisation = () => {
                         </div>
                       )}
                       
-                      {/* ✅ NOUVEAU - Slogan */}
+                      {/* Slogan */}
                       {sloganEnabled && sloganText && (
                         <div 
                           ref={sloganRef}
@@ -567,7 +630,7 @@ const Personnalisation = () => {
                       />
                     </div>
 
-                    {/* Police et Couleur pour Nom/Numéro */}
+                    {/* Police et Couleur */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="font">Police</Label>
@@ -625,7 +688,7 @@ const Personnalisation = () => {
                       </RadioGroup>
                     </div>
 
-                    {/* ✅ NOUVEAU - Section Slogan */}
+                    {/* Section Slogan */}
                     <div className="pt-4 border-t border-border space-y-4">
                       <div className="flex items-center space-x-2">
                         <Checkbox 
@@ -705,7 +768,7 @@ const Personnalisation = () => {
                       )}
                     </div>
 
-                    {/* ✅ Boutons d'action */}
+                    {/* Boutons d'action */}
                     <div className="pt-4 border-t border-border space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-semibold">Prix total:</span>
@@ -725,9 +788,9 @@ const Personnalisation = () => {
                         {isSaved ? "✓ Personnalisation enregistrée" : "Enregistrer la personnalisation"}
                       </Button>
 
-                      {/* Bouton Ajouter au panier */}
+                      {/* ✅ BOUTON COMMANDER MAINTENANT */}
                       <Button 
-                        onClick={handleAddToCart}
+                        onClick={handleOrderNow}
                         className={`w-full shadow-elegant ${
                           !isSaved ? "opacity-50 cursor-not-allowed" : ""
                         }`}
@@ -735,7 +798,19 @@ const Personnalisation = () => {
                         disabled={!isSaved}
                       >
                         <ShoppingCart className="mr-2 h-5 w-5" />
-                        Ajouter au panier
+                        Commander maintenant
+                      </Button>
+
+                      {/* Bouton Ajouter au panier (optionnel) */}
+                      <Button 
+                        onClick={handleAddToCart}
+                        className="w-full shadow-elegant"
+                        size="lg"
+                        variant="outline"
+                        disabled={!isSaved}
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        Ou ajouter au panier
                       </Button>
 
                       {!isSaved && (
@@ -748,22 +823,44 @@ const Personnalisation = () => {
                 </Card>
 
                 {/* Info */}
-                <Card className="bg-accent/10 border-accent">
+                <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2 flex items-center">
-                      <Sparkles className="h-4 w-4 mr-2 text-accent-foreground" />
-                      Personnalisation Premium
+                    <h3 className="font-semibold mb-3 flex items-center text-blue-800">
+                      <Info className="h-5 w-5 mr-2" />
+                      Comment ça marche ?
                     </h3>
-                    <ul className="text-sm space-y-1 text-muted-foreground">
-                      <li>✓ Maillot de base: 180 DH</li>
-                      <li>✓ Nom personnalisé: +30 DH</li>
-                      <li>✓ Numéro: +20 DH</li>
-                      <li>✓ Slogan: +50 DH</li>
-                      <li>✓ Déplacement libre par glisser-déposer</li>
-                      <li>✓ Zoom interactif</li>
-                      <li>✓ Sauvegarde sécurisée</li>
-                      <li>✓ Qualité garantie</li>
-                    </ul>
+                    <ol className="text-sm space-y-2 text-blue-700">
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">1️⃣</span>
+                        <span>Personnalisez votre maillot (nom, numéro, slogan)</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">2️⃣</span>
+                        <span>Cliquez sur "Enregistrer la personnalisation"</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">3️⃣</span>
+                        <span>Cliquez sur "Commander maintenant"</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">4️⃣</span>
+                        <span><strong>Remplissez vos coordonnées</strong> (nom, téléphone, adresse)</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">5️⃣</span>
+                        <span>Validez - Votre commande est enregistrée ! ✅</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">6️⃣</span>
+                        <span>Nous vous contactons pour confirmer et livrer 📦</span>
+                      </li>
+                    </ol>
+                    
+                    <div className="mt-3 p-2 bg-blue-100 rounded-lg">
+                      <p className="text-xs text-blue-800 font-semibold">
+                        💡 Livraison rapide • Paiement à la livraison disponible
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -771,6 +868,151 @@ const Personnalisation = () => {
           </div>
         </section>
       </main>
+
+      {/* ✅ MODAL FORMULAIRE CLIENT */}
+      {showClientForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '12px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
+              📋 Vos coordonnées
+            </h2>
+            
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                Nom complet *
+              </label>
+              <input
+                type="text"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Ex: Zakaria Mihrab"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                Téléphone *
+              </label>
+              <input
+                type="tel"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="Ex: 06 12 34 56 78"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                Ville
+              </label>
+              <input
+                type="text"
+                value={clientCity}
+                onChange={(e) => setClientCity(e.target.value)}
+                placeholder="Ex: Casablanca"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                Adresse
+              </label>
+              <textarea
+                value={clientAddress}
+                onChange={(e) => setClientAddress(e.target.value)}
+                placeholder="Ex: 123 Rue Mohammed V, Quartier Maarif"
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowClientForm(false)}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: '#e5e7eb',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  opacity: isSubmitting ? 0.5 : 1
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={submitOrder}
+                disabled={!clientName || !clientPhone || isSubmitting}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: !clientName || !clientPhone || isSubmitting ? '#9ca3af' : '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: !clientName || !clientPhone || isSubmitting ? 'not-allowed' : 'pointer',
+                  opacity: !clientName || !clientPhone || isSubmitting ? 0.6 : 1
+                }}
+              >
+                {isSubmitting ? '⏳ Envoi...' : '✅ Confirmer la commande'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
