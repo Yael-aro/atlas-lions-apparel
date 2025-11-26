@@ -1,13 +1,14 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import react from "@vitejs/plugin-react-swc";
+import { defineConfig } from "vite";
 
 export default defineConfig({
+  server: {
+    host: "::",
+    port: 8080,
+  },
   plugins: [react()],
-  base: '/',
+  base: '/nom-de-ton-repo/', // ✅ REMPLACE par le nom EXACT de ton repo GitHub
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
