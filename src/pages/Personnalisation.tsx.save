@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header";
+
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -235,9 +236,9 @@ const Personnalisation = () => {
       const html2canvas = (await import('html2canvas')).default;
       if (previewRef.current) {
         const canvas = await html2canvas(previewRef.current, {
+          scale: 2,
           backgroundColor: null,
           logging: false,
-          useCORS: true
         });
         return canvas.toDataURL('image/png');
       }
@@ -316,6 +317,7 @@ const Personnalisation = () => {
     setShowClientForm(true);
   };
 
+  // ✅ FONCTION CORRIGÉE POUR SUPABASE
   const submitOrder = async () => {
     if (!clientName || !clientPhone) {
       toast.error("Nom et téléphone obligatoires");
@@ -333,6 +335,7 @@ const Personnalisation = () => {
 
       const data: PersonalizationData = JSON.parse(savedData);
       
+      // Générer le numéro de commande
       const { count, error: countError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true });
@@ -342,6 +345,7 @@ const Personnalisation = () => {
       const orderNumber = `CMD-${String((count || 0) + 1).padStart(4, '0')}`;
       const totalPrice = calculatePrice();
       
+      // Insérer dans Supabase
       const { data: order, error: insertError } = await supabase
         .from('orders')
         .insert([
@@ -450,6 +454,7 @@ const Personnalisation = () => {
           <div className="container px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               
+              {/* Preview */}
               <Card className="shadow-elegant">
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold mb-4 text-center">Prévisualisation</h2>
@@ -570,6 +575,7 @@ const Personnalisation = () => {
                 </CardContent>
               </Card>
 
+              {/* Options */}
               <div className="space-y-6">
                 <Card className="shadow-elegant">
                   <CardContent className="p-6 space-y-6">
