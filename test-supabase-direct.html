@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Direct</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test Connexion Supabase</h1>
+    <button onclick="testConnection()">🔍 Tester la connexion</button>
+    <div id="result" style="margin-top: 20px; padding: 20px; border: 1px solid #ccc;"></div>
+
+    <script>
+        const supabaseUrl = 'https://qlmgtsqphjkmezkdcomp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsbWd0c3FwaGprbWV6a2Rjb21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNTE2NjUsImV4cCI6MjA3OTgyNzY2NX0._Mag3Zw89A-f6RDtxEF6pNzOUyeSM96'; // ✅ REMPLACE PAR TA VRAIE CLÉ
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '⏳ Test en cours...';
+            
+            try {
+                // Test 1: Select count
+                const { count, error } = await supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <h2 style="color: red;">❌ ERREUR</h2>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2 style="color: green;">✅ CONNEXION OK!</h2>
+                        <p>Nombre de commandes: ${count}</p>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `
+                    <h2 style="color: red;">❌ ERREUR CATCH</h2>
+                    <pre>${err.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
