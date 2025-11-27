@@ -230,22 +230,24 @@ const Personnalisation = () => {
     return null;
   };
 
-  const capturePreview = async (): Promise<string> => {
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      if (previewRef.current) {
-        const canvas = await html2canvas(previewRef.current, {
-          backgroundColor: null,
-          logging: false,
-          useCORS: true
-        });
-        return canvas.toDataURL('image/png');
-      }
-    } catch (error) {
-      console.error('Erreur capture:', error);
+const capturePreview = async (): Promise<string> => {
+  try {
+    const html2canvas = (await import('html2canvas')).default;
+    if (previewRef.current) {
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: null,
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      });
+      return canvas.toDataURL('image/png');
     }
-    return "data:image/png;base64,preview-image-placeholder";
-  };
+  } catch (error) {
+    console.error('Erreur capture:', error);
+    toast.warning("Aperçu non capturé, mais la commande continue");
+  }
+  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+};
 
   const handleSavePersonalization = async () => {
     const error = validatePersonalization();
