@@ -231,21 +231,8 @@ const Personnalisation = () => {
   };
 
 const capturePreview = async (): Promise<string> => {
-  try {
-    const html2canvas = (await import('html2canvas')).default;
-    if (previewRef.current) {
-      const canvas = await html2canvas(previewRef.current, {
-        backgroundColor: null,
-        logging: false,
-        useCORS: true,
-        allowTaint: true
-      });
-      return canvas.toDataURL('image/png');
-    }
-  } catch (error) {
-    console.error('Erreur capture:', error);
-    toast.warning("Aperçu non capturé, mais la commande continue");
-  }
+  // ON IGNORE HTML2CANVAS - ça plante trop souvent
+  console.log('Pas de capture - mode simple');
   return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 };
 
