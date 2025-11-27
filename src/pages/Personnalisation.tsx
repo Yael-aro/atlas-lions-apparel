@@ -16,8 +16,8 @@ import jerseyRedImage from "@/assets/jersey-red.jpg";
 import jerseyWhiteImage from "@/assets/jerseyWhiteImage.jpg";
 import backRedImage from "@/assets/back.jpg";
 import backWhiteImage from "@/assets/backWhiteImage.jpg";
+import { supabase } from '@/lib/supabase';
 
-// Type pour les données de personnalisation complètes
 interface PersonalizationData {
   id: string;
   timestamp: number;
@@ -52,7 +52,6 @@ const Personnalisation = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   
-  // États de base
   const [customText, setCustomText] = useState("MAROC");
   const [customNumber, setCustomNumber] = useState("10");
   const [selectedFont, setSelectedFont] = useState("montserrat");
@@ -60,14 +59,12 @@ const Personnalisation = () => {
   const [selectedPosition, setSelectedPosition] = useState("back");
   const [jerseyColor, setJerseyColor] = useState("red");
   
-  // États pour le slogan
   const [sloganEnabled, setSloganEnabled] = useState(false);
   const [sloganText, setSloganText] = useState("");
   const [sloganFont, setSloganFont] = useState("montserrat");
   const [sloganColor, setSloganColor] = useState("gold");
   const [sloganSize, setSloganSize] = useState<"small" | "medium" | "large">("medium");
   
-  // États pour positions drag & drop
   const [textPosition, setTextPosition] = useState({ x: 50, y: 35 });
   const [numberPosition, setNumberPosition] = useState({ x: 50, y: 50 });
   const [sloganPosition, setSloganPosition] = useState({ x: 50, y: 65 });
@@ -77,7 +74,6 @@ const Personnalisation = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [personalizationId, setPersonalizationId] = useState<string | null>(null);
   
-  // ✅ États pour le formulaire client
   const [showClientForm, setShowClientForm] = useState(false);
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
@@ -153,7 +149,6 @@ const Personnalisation = () => {
       : null;
   };
 
-  // Gestion du drag & drop
   const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
     setDraggedElement(element);
     setIsSaved(false);
@@ -194,7 +189,6 @@ const Personnalisation = () => {
     };
   }, [draggedElement]);
 
-  // Gestion du zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
@@ -205,19 +199,16 @@ const Personnalisation = () => {
   const handleZoomOut = () => setZoomLevel(prev => Math.max(0.5, prev - 0.2));
   const handleResetZoom = () => setZoomLevel(1);
 
-  // Reset positions
   useEffect(() => {
     setTextPosition({ x: 50, y: 35 });
     setNumberPosition({ x: 50, y: 50 });
     setSloganPosition({ x: 50, y: 65 });
   }, [selectedPosition]);
 
-  // Marquer comme non sauvegardé
   useEffect(() => {
     setIsSaved(false);
   }, [customText, customNumber, selectedFont, selectedColor, jerseyColor, sloganEnabled, sloganText, sloganFont, sloganColor, sloganSize]);
 
-  // Calcul du prix
   const calculatePrice = () => {
     const basePrice = 180;
     const textPrice = customText ? 30 : 0;
@@ -226,7 +217,6 @@ const Personnalisation = () => {
     return basePrice + textPrice + numberPrice + sloganPrice;
   };
 
-  // Validation
   const validatePersonalization = (): string | null => {
     if (!customText && !customNumber && (!sloganEnabled || !sloganText)) {
       return "Veuillez saisir au moins un nom, un numéro ou un slogan";
@@ -240,7 +230,6 @@ const Personnalisation = () => {
     return null;
   };
 
-  // Capture d'écran
   const capturePreview = async (): Promise<string> => {
     try {
       const html2canvas = (await import('html2canvas')).default;
@@ -258,7 +247,6 @@ const Personnalisation = () => {
     return "data:image/png;base64,preview-image-placeholder";
   };
 
-  // ✅ SAUVEGARDE
   const handleSavePersonalization = async () => {
     const error = validatePersonalization();
     if (error) {
@@ -317,7 +305,6 @@ const Personnalisation = () => {
     }
   };
 
-  // ✅ OUVRIR LE FORMULAIRE CLIENT
   const handleOrderNow = async () => {
     if (!isSaved || !personalizationId) {
       toast.error("Veuillez d'abord enregistrer votre personnalisation", {
@@ -329,9 +316,8 @@ const Personnalisation = () => {
     setShowClientForm(true);
   };
 
-  // ✅ SOUMETTRE LA COMMANDE AU BACKEND
+  // ✅ FONCTION CORRIGÉE POUR SUPABASE
   const submitOrder = async () => {
-    // Validation
     if (!clientName || !clientPhone) {
       toast.error("Nom et téléphone obligatoires");
       return;
@@ -348,57 +334,81 @@ const Personnalisation = () => {
 
       const data: PersonalizationData = JSON.parse(savedData);
       
-      // Envoyer au backend
-      const response = await fetch('http://localhost:8000/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          personalizationData: data,
-          customerInfo: {
-            name: clientName,
-            phone: clientPhone,
-            address: clientAddress,
-            city: clientCity
+      // Générer le numéro de commande
+      const { count, error: countError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) throw countError;
+      
+      const orderNumber = `CMD-${String((count || 0) + 1).padStart(4, '0')}`;
+      const totalPrice = calculatePrice();
+      
+      // Insérer dans Supabase
+      const { data: order, error: insertError } = await supabase
+        .from('orders')
+        .insert([
+          {
+            order_number: orderNumber,
+            personalization_id: data.id,
+            customer_name: clientName,
+            customer_phone: clientPhone,
+            customer_address: clientAddress || '',
+            customer_city: clientCity || '',
+            jersey_color: data.jerseyColor,
+            name_enabled: data.name.enabled,
+            name_text: data.name.text || '',
+            name_font: data.name.font,
+            name_color: data.name.color,
+            name_position_x: data.name.position.x,
+            name_position_y: data.name.position.y,
+            number_enabled: data.number.enabled,
+            number_text: data.number.text || '',
+            number_font: data.number.font,
+            number_color: data.number.color,
+            number_position_x: data.number.position.x,
+            number_position_y: data.number.position.y,
+            slogan_enabled: data.slogan.enabled,
+            slogan_text: data.slogan.text || '',
+            slogan_font: data.slogan.font,
+            slogan_color: data.slogan.color,
+            slogan_size: data.slogan.size,
+            slogan_position_x: data.slogan.position.x,
+            slogan_position_y: data.slogan.position.y,
+            selected_position: data.selectedPosition,
+            preview_image_url: data.previewImage || '',
+            total_price: totalPrice,
+            status: 'pending'
           }
-        })
+        ])
+        .select();
+
+      if (insertError) throw insertError;
+
+      toast.success(`✅ Commande ${orderNumber} enregistrée avec succès !`, {
+        duration: 5000
       });
       
-      const result = await response.json();
+      setShowClientForm(false);
+      setClientName('');
+      setClientPhone('');
+      setClientCity('');
+      setClientAddress('');
       
-      if (result.success) {
-        toast.success(`✅ Commande ${result.orderNumber} enregistrée avec succès !`, {
+      setTimeout(() => {
+        toast.info("📦 Vous recevrez une confirmation par téléphone", {
           duration: 5000
         });
-        
-        // Fermer le modal
-        setShowClientForm(false);
-        
-        // Réinitialiser le formulaire
-        setClientName('');
-        setClientPhone('');
-        setClientCity('');
-        setClientAddress('');
-        
-        // Message de confirmation
-        setTimeout(() => {
-          toast.info("📦 Vous recevrez une confirmation par téléphone", {
-            duration: 5000
-          });
-        }, 1000);
-        
-      } else {
-        toast.error("❌ Erreur lors de l'enregistrement de la commande");
-      }
+      }, 1000);
       
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error("❌ Impossible de contacter le serveur");
+      toast.error("❌ Erreur lors de l'enregistrement de la commande");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Ajout au panier (optionnel)
   const handleAddToCart = () => {
     if (!isSaved) {
       toast.error("Veuillez d'abord enregistrer votre personnalisation");
@@ -484,7 +494,6 @@ const Personnalisation = () => {
                         draggable={false}
                       />
                       
-                      {/* Nom */}
                       {customText && (
                         <div 
                           ref={textRef}
@@ -507,7 +516,6 @@ const Personnalisation = () => {
                         </div>
                       )}
                       
-                      {/* Numéro */}
                       {customNumber && (
                         <div 
                           ref={numberRef}
@@ -530,7 +538,6 @@ const Personnalisation = () => {
                         </div>
                       )}
                       
-                      {/* Slogan */}
                       {sloganEnabled && sloganText && (
                         <div 
                           ref={sloganRef}
@@ -573,7 +580,6 @@ const Personnalisation = () => {
                   <CardContent className="p-6 space-y-6">
                     <h2 className="text-2xl font-bold">Options de personnalisation</h2>
 
-                    {/* Couleur maillot */}
                     <div className="space-y-2">
                       <Label>Couleur du maillot</Label>
                       <div className="grid grid-cols-2 gap-3">
@@ -598,7 +604,6 @@ const Personnalisation = () => {
                       </div>
                     </div>
 
-                    {/* Nom */}
                     <div className="space-y-2">
                       <Label htmlFor="customText">Nom personnalisé (max 15 caractères)</Label>
                       <Input
@@ -611,7 +616,6 @@ const Personnalisation = () => {
                       <p className="text-xs text-muted-foreground">{customText.length}/15 caractères</p>
                     </div>
 
-                    {/* Numéro */}
                     <div className="space-y-2">
                       <Label htmlFor="customNumber">Numéro (1-99)</Label>
                       <Input
@@ -630,7 +634,6 @@ const Personnalisation = () => {
                       />
                     </div>
 
-                    {/* Police et Couleur */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="font">Police</Label>
@@ -669,7 +672,6 @@ const Personnalisation = () => {
                       <p className="text-xs text-amber-600">{getColorSuggestion()}</p>
                     )}
 
-                    {/* Position */}
                     <div className="space-y-2">
                       <Label>Position</Label>
                       <RadioGroup value={selectedPosition} onValueChange={setSelectedPosition}>
@@ -688,7 +690,6 @@ const Personnalisation = () => {
                       </RadioGroup>
                     </div>
 
-                    {/* Section Slogan */}
                     <div className="pt-4 border-t border-border space-y-4">
                       <div className="flex items-center space-x-2">
                         <Checkbox 
@@ -768,7 +769,6 @@ const Personnalisation = () => {
                       )}
                     </div>
 
-                    {/* Boutons d'action */}
                     <div className="pt-4 border-t border-border space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-semibold">Prix total:</span>
@@ -777,7 +777,6 @@ const Personnalisation = () => {
                         </span>
                       </div>
 
-                      {/* Bouton Enregistrer */}
                       <Button 
                         onClick={handleSavePersonalization}
                         className="w-full shadow-elegant bg-green-600 hover:bg-green-700" 
@@ -788,7 +787,6 @@ const Personnalisation = () => {
                         {isSaved ? "✓ Personnalisation enregistrée" : "Enregistrer la personnalisation"}
                       </Button>
 
-                      {/* ✅ BOUTON COMMANDER MAINTENANT */}
                       <Button 
                         onClick={handleOrderNow}
                         className={`w-full shadow-elegant ${
@@ -801,7 +799,6 @@ const Personnalisation = () => {
                         Commander maintenant
                       </Button>
 
-                      {/* Bouton Ajouter au panier (optionnel) */}
                       <Button 
                         onClick={handleAddToCart}
                         className="w-full shadow-elegant"
@@ -822,7 +819,6 @@ const Personnalisation = () => {
                   </CardContent>
                 </Card>
 
-                {/* Info */}
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-4">
                     <h3 className="font-semibold mb-3 flex items-center text-blue-800">
@@ -869,7 +865,6 @@ const Personnalisation = () => {
         </section>
       </main>
 
-      {/* ✅ MODAL FORMULAIRE CLIENT */}
       {showClientForm && (
         <div style={{
           position: 'fixed',

@@ -14,10 +14,9 @@ import {
   User,
   Calendar,
   X,
-  Home
+  Trash2
 } from 'lucide-react';
-
-const API_URL = 'http://localhost:8000';
+import { supabase } from '@/lib/supabase';
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -40,31 +39,82 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/stats?period=today`);
-      const data = await response.json();
-      if (data.success) {
-        setStats(data.stats);
-      }
+      // Date d'aujourd'hui
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Total commandes du jour
+      const { count: totalOrders, error: countError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today);
+
+      if (countError) throw countError;
+
+      // Chiffre d'affaires du jour
+      const { data: ordersData, error: revenueError } = await supabase
+        .from('orders')
+        .select('total_price')
+        .gte('created_at', today);
+      
+      if (revenueError) throw revenueError;
+
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_price || 0), 0) || 0;
+
+      // Commandes en cours
+      const { count: inProgress, error: progressError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['pending', 'confirmed', 'in_production']);
+
+      if (progressError) throw progressError;
+
+      // Commandes livrées
+      const { count: delivered, error: deliveredError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'delivered');
+
+      if (deliveredError) throw deliveredError;
+
+      setStats({
+        total_orders: totalOrders || 0,
+        total_revenue: totalRevenue,
+        in_progress: inProgress || 0,
+        delivered: delivered || 0
+      });
+
     } catch (error) {
       console.error('Erreur stats:', error);
+      alert('❌ Erreur lors du chargement des statistiques');
     }
   };
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
-      if (search) params.append('search', search);
-      
-      const response = await fetch(`${API_URL}/api/admin/orders?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setOrders(data.orders);
+      let query = supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Filtre par statut
+      if (statusFilter) {
+        query = query.eq('status', statusFilter);
       }
+
+      // Recherche
+      if (search) {
+        query = query.or(`customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_number.ilike.%${search}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setOrders(data || []);
     } catch (error) {
       console.error('Erreur commandes:', error);
+      alert('❌ Erreur lors du chargement des commandes');
     } finally {
       setLoading(false);
     }
@@ -72,38 +122,70 @@ const AdminDashboard = () => {
 
   const fetchOrderDetail = async (orderId) => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`);
-      const data = await response.json();
-      if (data.success) {
-        setSelectedOrder(data.order);
-        setShowModal(true);
-      }
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single();
+
+      if (error) throw error;
+
+      setSelectedOrder(data);
+      setShowModal(true);
     } catch (error) {
       console.error('Erreur détails:', error);
+      alert('❌ Erreur lors du chargement des détails');
     }
   };
 
   const updateStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
-      
-      if (response.ok) {
-        alert('✅ Statut mis à jour');
-        fetchOrders();
-        fetchStats();
-      }
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      alert('✅ Statut mis à jour avec succès');
+      fetchOrders();
+      fetchStats();
     } catch (error) {
       console.error('Erreur update:', error);
+      alert('❌ Erreur lors de la mise à jour');
     }
   };
 
-  const downloadImage = (imageUrl, orderNumber) => {
+  const deleteOrder = async (orderId) => {
+    if (!confirm('⚠️ Supprimer cette commande ? Cette action est irréversible.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      alert('✅ Commande supprimée avec succès');
+      setShowModal(false);
+      fetchOrders();
+      fetchStats();
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      alert('❌ Erreur lors de la suppression');
+    }
+  };
+
+  const downloadImage = (imageDataUrl, orderNumber) => {
+    // L'image est stockée en base64 dans preview_image_url
     const link = document.createElement('a');
-    link.href = `${API_URL}${imageUrl}`;
+    link.href = imageDataUrl;
     link.download = `maillot-${orderNumber}.png`;
     link.click();
   };
@@ -154,10 +236,10 @@ const AdminDashboard = () => {
       }}>
         <div>
           <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111', marginBottom: '8px' }}>
-            Dashboard Admin
+            🏆 Dashboard Admin
           </h1>
           <p style={{ color: '#6b7280', fontSize: '14px' }}>
-            Gestion des commandes Atlas Lions Apparel
+            Gestion des commandes Atlas Lions Apparel - CAN 2025
           </p>
         </div>
         <button
@@ -426,10 +508,10 @@ const AdminDashboard = () => {
               onMouseEnter={(e) => e.currentTarget.style.borderColor = '#2563eb'}
               onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
               >
-                {/* Image */}
+                {/* Image preview */}
                 {order.preview_image_url && (
                   <img 
-                    src={`${API_URL}${order.preview_image_url}`}
+                    src={order.preview_image_url}
                     alt="Maillot"
                     style={{ 
                       width: '120px', 
@@ -485,7 +567,7 @@ const AdminDashboard = () => {
                     color: '#374151'
                   }}>
                     <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                      Maillot {order.jersey_color === 'red' ? 'Rouge' : 'Blanc'}
+                      Maillot {order.jersey_color === 'red' ? '🔴 Rouge' : '⚪ Blanc'}
                     </div>
                     {order.name_enabled && order.name_text && (
                       <div>• Nom: {order.name_text}</div>
@@ -581,7 +663,7 @@ const AdminDashboard = () => {
                     
                     {order.customer_phone && (
                       <a 
-                        href={`https://wa.me/${order.customer_phone.replace(/\s/g, '')}`}
+                        href={`https://wa.me/212${order.customer_phone.replace(/^0/, '').replace(/\s/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -651,7 +733,9 @@ const AdminDashboard = () => {
           justifyContent: 'center',
           zIndex: 1000,
           padding: '20px'
-        }}>
+        }}
+        onClick={() => setShowModal(false)}
+        >
           <div style={{
             backgroundColor: 'white',
             borderRadius: '12px',
@@ -660,7 +744,9 @@ const AdminDashboard = () => {
             maxHeight: '90vh',
             overflow: 'auto',
             position: 'relative'
-          }}>
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
             <div style={{
               position: 'sticky',
               top: 0,
@@ -673,7 +759,7 @@ const AdminDashboard = () => {
               zIndex: 1
             }}>
               <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                Détails de la commande #{selectedOrder.order_number}
+                Commande #{selectedOrder.order_number}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -694,7 +780,7 @@ const AdminDashboard = () => {
               {selectedOrder.preview_image_url && (
                 <div style={{ marginBottom: '24px', textAlign: 'center' }}>
                   <img 
-                    src={`${API_URL}${selectedOrder.preview_image_url}`}
+                    src={selectedOrder.preview_image_url}
                     alt="Maillot"
                     style={{ 
                       maxWidth: '100%', 
@@ -763,7 +849,7 @@ const AdminDashboard = () => {
                   Personnalisation
                 </h3>
                 <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
-                  <div><strong>Couleur:</strong> {selectedOrder.jersey_color === 'red' ? 'Rouge' : 'Blanc'}</div>
+                  <div><strong>Couleur:</strong> {selectedOrder.jersey_color === 'red' ? '🔴 Rouge' : '⚪ Blanc'}</div>
                   {selectedOrder.name_enabled && (
                     <div><strong>Nom:</strong> {selectedOrder.name_text} ({selectedOrder.name_font}, {selectedOrder.name_color})</div>
                   )}
@@ -813,7 +899,7 @@ const AdminDashboard = () => {
               }}>
                 {selectedOrder.customer_phone && (
                   <a 
-                    href={`https://wa.me/${selectedOrder.customer_phone.replace(/\s/g, '')}`}
+                    href={`https://wa.me/212${selectedOrder.customer_phone.replace(/^0/, '').replace(/\s/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -832,7 +918,7 @@ const AdminDashboard = () => {
                     }}
                   >
                     <MessageCircle size={16} />
-                    Contacter sur WhatsApp
+                    WhatsApp
                   </a>
                 )}
                 {selectedOrder.preview_image_url && (
@@ -855,9 +941,30 @@ const AdminDashboard = () => {
                     }}
                   >
                     <Download size={16} />
-                    Télécharger image
+                    Télécharger
                   </button>
                 )}
+                <button
+                  onClick={() => deleteOrder(selectedOrder.id)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '12px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Trash2 size={16} />
+                  Supprimer
+                </button>
               </div>
             </div>
           </div>
