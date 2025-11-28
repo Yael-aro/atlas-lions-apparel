@@ -1,73 +1,50 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/contexts/CartContext";
-import { Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const Panier = () => {
-  const { items, removeFromCart, getTotalPrice } = useCart();
-  const navigate = useNavigate();
+  const { items, getTotalPrice } = useCart();
+
+  console.log('🔍 Items dans le panier:', items);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 p-8">
-        <h1 className="text-4xl font-bold mb-4">Panier avec useCart</h1>
+        <h1 className="text-4xl font-bold mb-4">Debug Panier</h1>
+        
+        <div style={{ backgroundColor: '#f0f0f0', padding: '20px', marginBottom: '20px' }}>
+          <p><strong>Nombre d'articles :</strong> {items.length}</p>
+          <p><strong>Total :</strong> {getTotalPrice()} DH</p>
+        </div>
+
+        <h2 className="text-2xl font-bold mb-4">Liste des produits :</h2>
         
         {items.length === 0 ? (
-          <Card className="max-w-md mx-auto text-center p-8">
-            <p className="text-xl mb-4">Votre panier est vide</p>
-            <Button onClick={() => navigate("/boutique")}>
-              Voir la boutique
-            </Button>
-          </Card>
+          <p>Panier vide</p>
         ) : (
-          <div className="max-w-4xl mx-auto">
-            <p className="text-xl mb-4">✅ useCart fonctionne ! {items.length} article(s)</p>
-            
-            <div className="space-y-4">
-              {items.map((item) => (
-                <Card key={item.id}>
-                  <CardContent className="p-4 flex justify-between items-center">
-                    <div className="flex gap-4 items-center">
-                      <img 
-                        src={item.image} 
-                        alt={item.name}
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                      <div>
-                        <h3 className="font-bold">{item.name}</h3>
-                        <p>{item.price} DH × {item.quantity}</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="mt-8">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-center text-2xl font-bold">
-                  <span>Total</span>
-                  <span>{getTotalPrice()} DH</span>
-                </div>
-                <Button 
-                  className="w-full mt-4" 
-                  size="lg"
-                  onClick={() => alert('Commande OK ! On ajoutera Supabase après')}
+          <div>
+            {items.map((item, index) => {
+              console.log(`Item ${index}:`, item);
+              
+              return (
+                <div 
+                  key={item.id || index}
+                  style={{
+                    backgroundColor: 'white',
+                    padding: '20px',
+                    marginBottom: '10px',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px'
+                  }}
                 >
-                  Commander (test sans Supabase)
-                </Button>
-              </CardContent>
-            </Card>
+                  <p><strong>Nom :</strong> {item.name || 'Non défini'}</p>
+                  <p><strong>Prix :</strong> {item.price || 0} DH</p>
+                  <p><strong>Quantité :</strong> {item.quantity || 0}</p>
+                  <p><strong>ID :</strong> {item.id || 'Pas d\'ID'}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
