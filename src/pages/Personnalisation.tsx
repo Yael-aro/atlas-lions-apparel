@@ -18,6 +18,7 @@ import backRedImage from "@/assets/back.jpg";
 import backWhiteImage from "@/assets/backWhiteImage.jpg";
 import { supabase } from '@/lib/supabase';
 
+// Type pour les données de personnalisation complètes
 interface PersonalizationData {
   id: string;
   timestamp: number;
@@ -52,6 +53,19 @@ const Personnalisation = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   
+  // ✅ Détection mobile
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // États de base
   const [customText, setCustomText] = useState("MAROC");
   const [customNumber, setCustomNumber] = useState("10");
   const [selectedFont, setSelectedFont] = useState("montserrat");
@@ -59,12 +73,14 @@ const Personnalisation = () => {
   const [selectedPosition, setSelectedPosition] = useState("back");
   const [jerseyColor, setJerseyColor] = useState("red");
   
+  // États pour le slogan
   const [sloganEnabled, setSloganEnabled] = useState(false);
   const [sloganText, setSloganText] = useState("");
   const [sloganFont, setSloganFont] = useState("montserrat");
   const [sloganColor, setSloganColor] = useState("gold");
   const [sloganSize, setSloganSize] = useState<"small" | "medium" | "large">("medium");
   
+  // États pour positions drag & drop
   const [textPosition, setTextPosition] = useState({ x: 50, y: 35 });
   const [numberPosition, setNumberPosition] = useState({ x: 50, y: 50 });
   const [sloganPosition, setSloganPosition] = useState({ x: 50, y: 65 });
@@ -74,6 +90,7 @@ const Personnalisation = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [personalizationId, setPersonalizationId] = useState<string | null>(null);
   
+  // ✅ États pour le formulaire client
   const [showClientForm, setShowClientForm] = useState(false);
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
@@ -149,13 +166,16 @@ const Personnalisation = () => {
       : null;
   };
 
+  // ✅ Gestion du drag & drop (DÉSACTIVÉ SUR MOBILE)
   const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
+    if (isMobile) return; // ✅ BLOQUÉ SUR MOBILE
     setDraggedElement(element);
     setIsSaved(false);
     e.preventDefault();
   };
 
   const handleMouseMove = (e: MouseEvent) => {
+    if (isMobile) return; // ✅ BLOQUÉ SUR MOBILE
     if (draggedElement && previewRef.current) {
       const rect = previewRef.current.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -179,7 +199,7 @@ const Personnalisation = () => {
   };
 
   useEffect(() => {
-    if (draggedElement) {
+    if (draggedElement && !isMobile) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     }
@@ -187,8 +207,9 @@ const Personnalisation = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [draggedElement]);
+  }, [draggedElement, isMobile]);
 
+  // Gestion du zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
@@ -199,24 +220,26 @@ const Personnalisation = () => {
   const handleZoomOut = () => setZoomLevel(prev => Math.max(0.5, prev - 0.2));
   const handleResetZoom = () => setZoomLevel(1);
 
+  // Reset positions
   useEffect(() => {
     setTextPosition({ x: 50, y: 35 });
     setNumberPosition({ x: 50, y: 50 });
     setSloganPosition({ x: 50, y: 65 });
   }, [selectedPosition]);
 
+  // Marquer comme non sauvegardé
   useEffect(() => {
     setIsSaved(false);
   }, [customText, customNumber, selectedFont, selectedColor, jerseyColor, sloganEnabled, sloganText, sloganFont, sloganColor, sloganSize]);
 
+  // Calcul du prix
   const calculatePrice = () => {
-    const basePrice = 180;
-    const textPrice = customText ? 30 : 0;
-    const numberPrice = customNumber ? 20 : 0;
+    const basePrice = 280;
     const sloganPrice = sloganEnabled && sloganText ? 50 : 0;
-    return basePrice + textPrice + numberPrice + sloganPrice;
+    return basePrice + sloganPrice;
   };
 
+  // Validation
   const validatePersonalization = (): string | null => {
     if (!customText && !customNumber && (!sloganEnabled || !sloganText)) {
       return "Veuillez saisir au moins un nom, un numéro ou un slogan";
@@ -230,12 +253,25 @@ const Personnalisation = () => {
     return null;
   };
 
-const capturePreview = async (): Promise<string> => {
-  // ON IGNORE HTML2CANVAS - ça plante trop souvent
-  console.log('Pas de capture - mode simple');
-  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-};
+  // Capture d'écran
+  const capturePreview = async (): Promise<string> => {
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      if (previewRef.current) {
+        const canvas = await html2canvas(previewRef.current, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+        });
+        return canvas.toDataURL('image/png');
+      }
+    } catch (error) {
+      console.error('Erreur capture:', error);
+    }
+    return "";
+  };
 
+  // ✅ SAUVEGARDE
   const handleSavePersonalization = async () => {
     const error = validatePersonalization();
     if (error) {
@@ -294,6 +330,7 @@ const capturePreview = async (): Promise<string> => {
     }
   };
 
+  // ✅ OUVRIR LE FORMULAIRE CLIENT
   const handleOrderNow = async () => {
     if (!isSaved || !personalizationId) {
       toast.error("Veuillez d'abord enregistrer votre personnalisation", {
@@ -305,6 +342,7 @@ const capturePreview = async (): Promise<string> => {
     setShowClientForm(true);
   };
 
+  // ✅ SOUMETTRE LA COMMANDE À SUPABASE
   const submitOrder = async () => {
     if (!clientName || !clientPhone) {
       toast.error("Nom et téléphone obligatoires");
@@ -312,6 +350,7 @@ const capturePreview = async (): Promise<string> => {
     }
 
     setIsSubmitting(true);
+    const loadingToast = toast.loading('⏳ Enregistrement de votre commande...');
 
     try {
       const savedData = localStorage.getItem(`personalization-${personalizationId}`);
@@ -329,72 +368,83 @@ const capturePreview = async (): Promise<string> => {
       if (countError) throw countError;
       
       const orderNumber = `CMD-${String((count || 0) + 1).padStart(4, '0')}`;
-      const totalPrice = calculatePrice();
-      
-      const { data: order, error: insertError } = await supabase
+
+      const orderData = {
+        order_number: orderNumber,
+        personalization_id: personalizationId,
+        customer_name: clientName,
+        customer_phone: clientPhone,
+        customer_address: clientAddress || '',
+        customer_city: clientCity || '',
+        
+        product_name: `Maillot Maroc Premium ${jerseyColor === 'red' ? 'Rouge' : 'Blanc'}`,
+        product_price: 280,
+        product_image_url: getCurrentJerseyImage(),
+        product_category: 'Maillots',
+        
+        jersey_color: jerseyColor,
+        total_price: calculatePrice(),
+        status: 'pending',
+        notes: `Personnalisation ${selectedPosition} - Maillot ${jerseyColor === 'red' ? 'Rouge' : 'Blanc'}`,
+        
+        name_enabled: data.name.enabled,
+        name_text: data.name.text,
+        name_font: data.name.font,
+        name_color: data.name.color,
+        name_position_x: data.name.position.x,
+        name_position_y: data.name.position.y,
+        
+        number_enabled: data.number.enabled,
+        number_text: data.number.text,
+        number_font: data.number.font,
+        number_color: data.number.color,
+        number_position_x: data.number.position.x,
+        number_position_y: data.number.position.y,
+        
+        slogan_enabled: data.slogan.enabled,
+        slogan_text: data.slogan.text,
+        slogan_font: data.slogan.font,
+        slogan_color: data.slogan.color,
+        slogan_size: data.slogan.size,
+        slogan_position_x: data.slogan.position.x,
+        slogan_position_y: data.slogan.position.y,
+        
+        selected_position: selectedPosition,
+        preview_image_url: data.previewImage || ''
+      };
+
+      const { error: insertError } = await supabase
         .from('orders')
-        .insert([
-          {
-            order_number: orderNumber,
-            personalization_id: data.id,
-            customer_name: clientName,
-            customer_phone: clientPhone,
-            customer_address: clientAddress || '',
-            customer_city: clientCity || '',
-            jersey_color: data.jerseyColor,
-            name_enabled: data.name.enabled,
-            name_text: data.name.text || '',
-            name_font: data.name.font,
-            name_color: data.name.color,
-            name_position_x: data.name.position.x,
-            name_position_y: data.name.position.y,
-            number_enabled: data.number.enabled,
-            number_text: data.number.text || '',
-            number_font: data.number.font,
-            number_color: data.number.color,
-            number_position_x: data.number.position.x,
-            number_position_y: data.number.position.y,
-            slogan_enabled: data.slogan.enabled,
-            slogan_text: data.slogan.text || '',
-            slogan_font: data.slogan.font,
-            slogan_color: data.slogan.color,
-            slogan_size: data.slogan.size,
-            slogan_position_x: data.slogan.position.x,
-            slogan_position_y: data.slogan.position.y,
-            selected_position: data.selectedPosition,
-            preview_image_url: data.previewImage || '',
-            total_price: totalPrice,
-            status: 'pending'
-          }
-        ])
-        .select();
+        .insert([orderData]);
 
       if (insertError) throw insertError;
 
-      toast.success(`✅ Commande ${orderNumber} enregistrée avec succès !`, {
-        duration: 5000
+      toast.dismiss(loadingToast);
+      toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
+        duration: 5000,
+        description: 'Confirmation par téléphone sous 24h'
       });
-      
+
       setShowClientForm(false);
       setClientName('');
       setClientPhone('');
       setClientCity('');
       setClientAddress('');
-      
+
       setTimeout(() => {
-        toast.info("📦 Vous recevrez une confirmation par téléphone", {
-          duration: 5000
-        });
-      }, 1000);
+        navigate('/');
+      }, 2000);
       
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
       console.error('Erreur:', error);
-      toast.error("❌ Erreur lors de l'enregistrement de la commande");
+      toast.error("❌ Erreur: " + (error.message || "Veuillez réessayer"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Ajout au panier (optionnel)
   const handleAddToCart = () => {
     if (!isSaved) {
       toast.error("Veuillez d'abord enregistrer votre personnalisation");
@@ -423,25 +473,26 @@ const capturePreview = async (): Promise<string> => {
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Bebas+Neue&family=Oswald:wght@700&family=Roboto:wght@900&family=Permanent+Marker&family=Cairo:wght@700&family=Amiri:wght@700&display=swap" rel="stylesheet" />
       
       <main className="flex-1">
-        <section className="gradient-primary py-16 text-white">
+        <section className="gradient-primary py-12 md:py-16 text-white">
           <div className="container px-4">
             <div className="flex items-center justify-center mb-4">
-              <Sparkles className="h-8 w-8 mr-3" />
-              <h1 className="text-4xl md:text-5xl font-bold">Personnalisation Premium</h1>
+              <Sparkles className="h-6 w-6 md:h-8 md:w-8 mr-3" />
+              <h1 className="text-3xl md:text-5xl font-bold text-center">Personnalisation Premium</h1>
             </div>
-            <p className="text-xl text-white/90 text-center">
+            <p className="text-lg md:text-xl text-white/90 text-center">
               Créez votre maillot unique - Commande directe en ligne
             </p>
           </div>
         </section>
 
-        <section className="py-12">
+        <section className="py-8 md:py-12">
           <div className="container px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-7xl mx-auto">
               
+              {/* Preview */}
               <Card className="shadow-elegant">
-                <CardContent className="p-8">
-                  <h2 className="text-2xl font-bold mb-4 text-center">Prévisualisation</h2>
+                <CardContent className="p-4 md:p-8">
+                  <h2 className="text-xl md:text-2xl font-bold mb-4 text-center">Prévisualisation</h2>
                   
                   <div className="flex justify-center gap-2 mb-4">
                     <Button variant="outline" size="sm" onClick={handleZoomOut}>
@@ -479,6 +530,7 @@ const capturePreview = async (): Promise<string> => {
                         draggable={false}
                       />
                       
+                      {/* Nom */}
                       {customText && (
                         <div 
                           ref={textRef}
@@ -488,10 +540,10 @@ const capturePreview = async (): Promise<string> => {
                             left: `${textPosition.x}%`,
                             top: `${textPosition.y}%`,
                             transform: "translate(-50%, -50%)",
-                            cursor: "move",
+                            cursor: isMobile ? "default" : "move",
                             fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
                             color: colors.find(c => c.value === selectedColor)?.hex,
-                            fontSize: "2rem",
+                            fontSize: isMobile ? "1.5rem" : "2rem",
                             fontWeight: "bold",
                             textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
                             WebkitTextStroke: "1px rgba(0,0,0,0.3)",
@@ -501,6 +553,7 @@ const capturePreview = async (): Promise<string> => {
                         </div>
                       )}
                       
+                      {/* Numéro */}
                       {customNumber && (
                         <div 
                           ref={numberRef}
@@ -510,10 +563,10 @@ const capturePreview = async (): Promise<string> => {
                             left: `${numberPosition.x}%`,
                             top: `${numberPosition.y}%`,
                             transform: "translate(-50%, -50%)",
-                            cursor: "move",
+                            cursor: isMobile ? "default" : "move",
                             fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
                             color: colors.find(c => c.value === selectedColor)?.hex,
-                            fontSize: "5rem",
+                            fontSize: isMobile ? "3rem" : "5rem",
                             fontWeight: "bold",
                             textShadow: "3px 3px 6px rgba(0,0,0,0.7)",
                             WebkitTextStroke: "2px rgba(0,0,0,0.3)",
@@ -523,6 +576,7 @@ const capturePreview = async (): Promise<string> => {
                         </div>
                       )}
                       
+                      {/* Slogan */}
                       {sloganEnabled && sloganText && (
                         <div 
                           ref={sloganRef}
@@ -532,7 +586,7 @@ const capturePreview = async (): Promise<string> => {
                             left: `${sloganPosition.x}%`,
                             top: `${sloganPosition.y}%`,
                             transform: "translate(-50%, -50%)",
-                            cursor: "move",
+                            cursor: isMobile ? "default" : "move",
                             fontFamily: fonts.find(f => f.value === sloganFont)?.fontFamily,
                             color: colors.find(c => c.value === sloganColor)?.hex,
                             fontSize: sloganSizes.find(s => s.value === sloganSize)?.fontSize,
@@ -551,19 +605,30 @@ const capturePreview = async (): Promise<string> => {
                     <p className="text-center text-sm text-muted-foreground">
                       Position: {selectedPosition === "back" ? "Dos" : selectedPosition === "chest" ? "Poitrine" : "Manche"}
                     </p>
-                    <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-                      <Info className="h-3 w-3" />
-                      Glissez les éléments pour les déplacer • Molette pour zoomer
-                    </p>
+                    {/* ✅ Message différent sur mobile */}
+                    {!isMobile && (
+                      <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
+                        <Info className="h-3 w-3" />
+                        Glissez les éléments pour les déplacer • Molette pour zoomer
+                      </p>
+                    )}
+                    {isMobile && (
+                      <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
+                        <Info className="h-3 w-3" />
+                        Molette/Pincement pour zoomer
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Options */}
               <div className="space-y-6">
                 <Card className="shadow-elegant">
-                  <CardContent className="p-6 space-y-6">
-                    <h2 className="text-2xl font-bold">Options de personnalisation</h2>
+                  <CardContent className="p-4 md:p-6 space-y-6">
+                    <h2 className="text-xl md:text-2xl font-bold">Options de personnalisation</h2>
 
+                    {/* Couleur maillot */}
                     <div className="space-y-2">
                       <Label>Couleur du maillot</Label>
                       <div className="grid grid-cols-2 gap-3">
@@ -580,14 +645,15 @@ const capturePreview = async (): Promise<string> => {
                             <img 
                               src={jersey.image} 
                               alt={jersey.label}
-                              className="w-full h-24 object-contain mb-2"
+                              className="w-full h-20 md:h-24 object-contain mb-2"
                             />
-                            <p className="text-sm font-medium">{jersey.label}</p>
+                            <p className="text-xs md:text-sm font-medium">{jersey.label}</p>
                           </button>
                         ))}
                       </div>
                     </div>
 
+                    {/* Nom */}
                     <div className="space-y-2">
                       <Label htmlFor="customText">Nom personnalisé (max 15 caractères)</Label>
                       <Input
@@ -600,6 +666,7 @@ const capturePreview = async (): Promise<string> => {
                       <p className="text-xs text-muted-foreground">{customText.length}/15 caractères</p>
                     </div>
 
+                    {/* Numéro */}
                     <div className="space-y-2">
                       <Label htmlFor="customNumber">Numéro (1-99)</Label>
                       <Input
@@ -618,7 +685,8 @@ const capturePreview = async (): Promise<string> => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Police et Couleur */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="font">Police</Label>
                         <Select value={selectedFont} onValueChange={setSelectedFont}>
@@ -656,6 +724,7 @@ const capturePreview = async (): Promise<string> => {
                       <p className="text-xs text-amber-600">{getColorSuggestion()}</p>
                     )}
 
+                    {/* Position */}
                     <div className="space-y-2">
                       <Label>Position</Label>
                       <RadioGroup value={selectedPosition} onValueChange={setSelectedPosition}>
@@ -674,6 +743,7 @@ const capturePreview = async (): Promise<string> => {
                       </RadioGroup>
                     </div>
 
+                    {/* Section Slogan */}
                     <div className="pt-4 border-t border-border space-y-4">
                       <div className="flex items-center space-x-2">
                         <Checkbox 
@@ -700,7 +770,7 @@ const capturePreview = async (): Promise<string> => {
                             <p className="text-xs text-muted-foreground">{sloganText.length}/30 caractères</p>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>Police slogan</Label>
                               <Select value={sloganFont} onValueChange={setSloganFont}>
@@ -753,14 +823,16 @@ const capturePreview = async (): Promise<string> => {
                       )}
                     </div>
 
+                    {/* Boutons d'action */}
                     <div className="pt-4 border-t border-border space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold">Prix total:</span>
-                        <span className="text-2xl font-bold text-primary">
+                        <span className="text-base md:text-lg font-semibold">Prix total:</span>
+                        <span className="text-xl md:text-2xl font-bold text-primary">
                           {calculatePrice()} DH
                         </span>
                       </div>
 
+                      {/* Bouton Enregistrer */}
                       <Button 
                         onClick={handleSavePersonalization}
                         className="w-full shadow-elegant bg-green-600 hover:bg-green-700" 
@@ -771,6 +843,7 @@ const capturePreview = async (): Promise<string> => {
                         {isSaved ? "✓ Personnalisation enregistrée" : "Enregistrer la personnalisation"}
                       </Button>
 
+                      {/* ✅ BOUTON COMMANDER MAINTENANT */}
                       <Button 
                         onClick={handleOrderNow}
                         className={`w-full shadow-elegant ${
@@ -783,6 +856,7 @@ const capturePreview = async (): Promise<string> => {
                         Commander maintenant
                       </Button>
 
+                      {/* Bouton Ajouter au panier (optionnel) */}
                       <Button 
                         onClick={handleAddToCart}
                         className="w-full shadow-elegant"
@@ -803,13 +877,14 @@ const capturePreview = async (): Promise<string> => {
                   </CardContent>
                 </Card>
 
+                {/* Info */}
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-4">
-                    <h3 className="font-semibold mb-3 flex items-center text-blue-800">
+                    <h3 className="font-semibold mb-3 flex items-center text-blue-800 text-sm md:text-base">
                       <Info className="h-5 w-5 mr-2" />
                       Comment ça marche ?
                     </h3>
-                    <ol className="text-sm space-y-2 text-blue-700">
+                    <ol className="text-xs md:text-sm space-y-2 text-blue-700">
                       <li className="flex items-start">
                         <span className="font-bold mr-2">1️⃣</span>
                         <span>Personnalisez votre maillot (nom, numéro, slogan)</span>
@@ -849,145 +924,74 @@ const capturePreview = async (): Promise<string> => {
         </section>
       </main>
 
+      {/* ✅ MODAL FORMULAIRE CLIENT */}
       {showClientForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '12px',
-            maxWidth: '500px',
-            width: '90%',
-            maxHeight: '90vh',
-            overflow: 'auto'
-          }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
-              📋 Vos coordonnées
-            </h2>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-                Nom complet *
-              </label>
-              <input
-                type="text"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Ex: Zakaria Mihrab"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-auto shadow-2xl animate-in zoom-in slide-in-from-bottom">
+            <div className="p-6 space-y-4">
+              <h2 className="text-2xl font-bold">📋 Vos coordonnées</h2>
+              
+              <div>
+                <label className="block mb-2 font-semibold text-sm">Nom complet *</label>
+                <input
+                  type="text"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="Ex: Zakaria Mihrab"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-                Téléphone *
-              </label>
-              <input
-                type="tel"
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="Ex: 06 12 34 56 78"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
+              <div>
+                <label className="block mb-2 font-semibold text-sm">Téléphone *</label>
+                <input
+                  type="tel"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="06 12 34 56 78"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-                Ville
-              </label>
-              <input
-                type="text"
-                value={clientCity}
-                onChange={(e) => setClientCity(e.target.value)}
-                placeholder="Ex: Casablanca"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
+              <div>
+                <label className="block mb-2 font-semibold text-sm">Ville</label>
+                <input
+                  type="text"
+                  value={clientCity}
+                  onChange={(e) => setClientCity(e.target.value)}
+                  placeholder="Ex: Casablanca"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-                Adresse
-              </label>
-              <textarea
-                value={clientAddress}
-                onChange={(e) => setClientAddress(e.target.value)}
-                placeholder="Ex: 123 Rue Mohammed V, Quartier Maarif"
-                rows={3}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
+              <div>
+                <label className="block mb-2 font-semibold text-sm">Adresse</label>
+                <textarea
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
+                  placeholder="Ex: 123 Rue Mohammed V"
+                  rows={3}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                />
+              </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => setShowClientForm(false)}
-                disabled={isSubmitting}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#e5e7eb',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: isSubmitting ? 0.5 : 1
-                }}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={submitOrder}
-                disabled={!clientName || !clientPhone || isSubmitting}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: !clientName || !clientPhone || isSubmitting ? '#9ca3af' : '#059669',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: !clientName || !clientPhone || isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: !clientName || !clientPhone || isSubmitting ? 0.6 : 1
-                }}
-              >
-                {isSubmitting ? '⏳ Envoi...' : '✅ Confirmer la commande'}
-              </button>
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  onClick={() => setShowClientForm(false)} 
+                  disabled={isSubmitting}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={submitOrder} 
+                  disabled={!clientName || !clientPhone || isSubmitting}
+                  className="flex-1"
+                >
+                  {isSubmitting ? '⏳ Envoi...' : '✅ Confirmer'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

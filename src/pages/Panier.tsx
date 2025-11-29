@@ -117,17 +117,29 @@ const Panier = () => {
           }
         }
 
-        const orderData: any = {
-          order_number: `${orderNumber}-${item.id}`,
-          personalization_id: item.id || `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          customer_name: customerName.trim(),
-          customer_phone: customerPhone.replace(/\s/g, ''),
-          customer_address: customerAddress.trim() || '',
-          customer_city: customerCity.trim() || '',
-          jersey_color: item.category === 'Maillot' ? 'red' : 'white',
-          total_price: item.price * item.quantity,
-          status: 'pending',
-          notes: `Panier - Quantité: ${item.quantity} - ${item.name}${promoCode ? ` - Promo: ${promoCode}` : ''}`,
+        // ✅ CORRECTION : Détecte la bonne catégorie
+        const isJersey = item.category === 'Maillots' || item.category === 'Maillot';
+        const defaultColor = isJersey ? 'red' : 'white';
+
+const orderData: any = {
+  order_number: `${orderNumber}-${item.id}`,
+  personalization_id: item.id || `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  customer_name: customerName.trim(),
+  customer_phone: customerPhone.replace(/\s/g, ''),
+  customer_address: customerAddress.trim() || '',
+  customer_city: customerCity.trim() || '',
+  
+  // ✅ Infos produit pour dashboard
+  product_name: item.name,
+  product_price: item.price,
+  product_image_url: item.image,
+  product_category: item.category,
+  product_size: item.size || '', // ✅ NOUVEAU
+  
+  jersey_color: defaultColor,
+  total_price: item.price * item.quantity,
+  status: 'pending',
+  notes: `📦 ${item.name} - Quantité: ${item.quantity} - Catégorie: ${item.category}${item.size ? ` - Taille: ${item.size}` : ''}${promoCode ? ` - Code: ${promoCode}` : ''}`,
           name_enabled: false,
           name_text: '',
           name_font: 'montserrat',
@@ -152,7 +164,7 @@ const Panier = () => {
         };
 
         if (personalizationData) {
-          orderData.jersey_color = personalizationData.jerseyColor || orderData.jersey_color;
+          orderData.jersey_color = personalizationData.jerseyColor || defaultColor;
           orderData.name_enabled = personalizationData.name?.enabled || false;
           orderData.name_text = personalizationData.name?.text || '';
           orderData.name_font = personalizationData.name?.font || 'montserrat';
@@ -280,20 +292,26 @@ const Panier = () => {
                           }}
                         />
                         <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="text-xl font-bold">{item.name}</h3>
-                              <p className="text-sm text-muted-foreground">{item.category}</p>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleRemoveItem(item.id, item.name)}
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                         <div className="flex justify-between items-start mb-2">
+  <div>
+    <h3 className="text-xl font-bold">{item.name}</h3>
+    <p className="text-sm text-muted-foreground">{item.category}</p>
+    {/* ✅ AFFICHE LA TAILLE si elle existe */}
+    {item.size && (
+      <p className="text-sm font-semibold text-primary mt-1">
+        Taille: {item.size}
+      </p>
+    )}
+  </div>
+  <Button 
+    variant="ghost" 
+    size="sm" 
+    onClick={() => handleRemoveItem(item.id, item.name)}
+    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+  >
+    <Trash2 className="h-4 w-4" />
+  </Button>
+</div>
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center gap-3">
                               <Button 
@@ -338,6 +356,17 @@ const Panier = () => {
                     
                     <div className="space-y-3">
                       <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          placeholder="Code promo"
+                          className="flex-1 px-3 py-2 border rounded-md"
+                        />
+                        <Button onClick={applyPromoCode} variant="outline" size="sm">
+                          <Tag className="h-4 w-4 mr-1" />
+                          Appliquer
+                        </Button>
                       </div>
                     </div>
 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface CartItem {
+export interface CartItem {
   id: string;
   name: string;
   price: number;
@@ -8,6 +8,7 @@ interface CartItem {
   category: string;
   quantity: number;
   customizable?: boolean;
+  size?: string; // ✅ NOUVEAU
 }
 
 interface CartContextType {

@@ -126,3 +126,37 @@ All colors MUST be HSL.
     transition: var(--transition-smooth);
   }
 }
+/* ✅ MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  /* Texte plus petit sur mobile */
+  h1 {
+    font-size: 2rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  /* Padding réduit sur mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Cartes produits mieux espacées */
+  .grid {
+    gap: 1rem !important;
+  }
+
+  /* Boutons pleine largeur sur mobile */
+  .w-full-mobile {
+    width: 100% !important;
+  }
+}
+
+/* ✅ TABLETTE */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .grid {
+    gap: 1.5rem !important;
+  }
+}

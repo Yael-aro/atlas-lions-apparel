@@ -15,10 +15,13 @@ import backWhiteImage from "@/assets/backWhiteImage.jpg";
 import shortWhiteImage from "@/assets/short-white.jpg";
 import biriaImage from "@/assets/biria.jpg";
 import biria1Image from "@/assets/biria1.jpg";
-// ✅ AJOUTE l'import pour le short blanc ici :
+// ✅ AJOUTE l'import de la miniature blanche
+import MinatureWhiteImage from "@/assets/minatureWhite.jpg"; // ⚠️ Adapte le nom selon ton fichier
 
+// ============================================
+// TYPES
+// ============================================
 
-// Type pour les variantes de couleur
 export interface ColorVariant {
   color: string;
   colorName: string;
@@ -33,62 +36,104 @@ export interface Product {
   image: string;
   images?: string[];
   category: string;
+  description?: string;
+  stock?: number;
   customizable?: boolean;
   featured?: boolean;
   hasColorVariants?: boolean;
   colorVariants?: ColorVariant[];
+  availableSizes?: string[]; // ✅ NOUVEAU
 }
+
+// ============================================
+// LISTE DES PRODUITS
+// ============================================
 
 export const products: Product[] = [
   // ============================================
   // MAILLOTS
   // ============================================
   {
-    id: "1",
-    name: "Maillot Maroc Premium",
-    price: 280,
-    image: jerseyImage,
-    images: [jerseyImage, backImage],
-    category: "Maillot",
-    customizable: true,
-    featured: true,
-    hasColorVariants: true,
-    colorVariants: [
-      {
-        color: "#C8102E", // Rouge
-        colorName: "Rouge",
-        image: jerseyImage,
-        images: [jerseyImage, backImage],
-      },
-      {
-        color: "#FFFFFF", // Blanc
-        colorName: "Blanc",
-        image: jerseyWhiteImage,
-        images: [jerseyWhiteImage, backWhiteImage],
-      },
-    ],
-  },
+  id: "1",
+  name: "Maillot Maroc Premium",
+  price: 280,
+  image: jerseyImage,
+  images: [jerseyImage, backImage], // ✅ Images par défaut
+  category: "Maillot",
+  description: "Maillot officiel premium de l'équipe du Maroc",
+  stock: 50,
+  customizable: true,
+  featured: true,
+  availableSizes: ["S", "M", "L", "XL", "XXL"],
+  hasColorVariants: true,
+  colorVariants: [
+    {
+      color: "#C8102E",
+      colorName: "Rouge",
+      image: jerseyImage,
+      images: [jerseyImage, backImage], // ✅ Face PUIS Dos rouge
+    },
+    {
+      color: "#FFFFFF",
+      colorName: "Blanc",
+      image: jerseyWhiteImage,
+      images: [jerseyWhiteImage, backWhiteImage], // ✅ Face PUIS Dos blanc
+    },
+  ],
+},
 
   // ============================================
   // PACKS
   // ============================================
   {
-    id: "2",
-    name: "Pack Complet Supporter",
-    price: 280,
-    image: MinatureImage,
-    images: [
-      MinatureImage,
-      jerseyImage,
-      biria1Image,
-      flagImage,
-      echapeImage,
-      siffletImage,
-    ],
-    category: "Pack",
-    customizable: false,
-    featured: true,
-  },
+  id: "2",
+  name: "Pack Complet Supporter",
+  price: 280,
+  image: MinatureImage,
+  images: [
+    MinatureImage,
+    jerseyImage,
+    biria1Image,
+    flagImage,
+    echapeImage,
+    siffletImage,
+  ], // ✅ Images par défaut
+  category: "Pack",
+  description: "Pack complet supporter avec maillot, chapeau, drapeau, écharpe et sifflet",
+  stock: 30,
+  customizable: false,
+  featured: true,
+  availableSizes: ["S", "M", "L", "XL", "XXL"],
+  hasColorVariants: true,
+  colorVariants: [
+    {
+      color: "#C8102E",
+      colorName: "Rouge",
+      image: MinatureImage,
+      images: [
+        MinatureImage,    // ✅ Miniature rouge
+        jerseyImage,      // Maillot
+        biria1Image,      // Chapeau
+        flagImage,        // Drapeau
+        echapeImage,      // Écharpe
+        siffletImage,     // Sifflet
+      ],
+    },
+    {
+      color: "#FFFFFF",
+      colorName: "Blanc",
+      image: MinatureWhiteImage, // ⚠️ Change par MinatureWhiteImage si tu l'as
+      images: [
+        MinatureWhiteImage,    // ⚠️ Change par MinatureWhiteImage si tu l'as
+        jerseyImage,      // Reste pareil
+        biria1Image,      // Reste pareil
+        flagImage,        // Reste pareil
+        echapeImage,      // Reste pareil
+        siffletImage,     // Reste pareil
+      ],
+    },
+  ],
+},
 
   // ============================================
   // VÊTEMENTS
@@ -99,27 +144,30 @@ export const products: Product[] = [
     price: 90,
     image: ShortImage,
     category: "Short",
+    description: "Short officiel de l'équipe du Maroc",
+    stock: 60,
     customizable: false,
     featured: false,
-    hasColorVariants: true, // ✅ NOUVEAU - Active le sélecteur de couleur
+    availableSizes: ["S", "M", "L", "XL", "XXL"], // ✅ NOUVEAU
+    hasColorVariants: true,
     colorVariants: [
       {
-        color: "#C8102E", // Rouge
+        color: "#C8102E",
         colorName: "Rouge",
         image: ShortImage,
         images: [ShortImage],
       },
       {
-        color: "#FFFFFF", // Blanc
+        color: "#FFFFFF",
         colorName: "Blanc",
-        image: shortWhiteImage, // ⚠️ Temporaire - remplace par shortWhiteImage quand tu as l'image
-        images: [shortWhiteImage], // ⚠️ Temporaire
+        image: shortWhiteImage,
+        images: [shortWhiteImage],
       },
     ],
   },
 
   // ============================================
-  // ACCESSOIRES
+  // ACCESSOIRES (PAS DE TAILLES)
   // ============================================
   {
     id: "4",
@@ -127,8 +175,11 @@ export const products: Product[] = [
     price: 50,
     image: echapeImage,
     category: "Accessoires",
+    description: "Écharpe officielle des supporters aux couleurs du Maroc",
+    stock: 80,
     customizable: false,
     featured: false,
+    // ❌ PAS de availableSizes
   },
   {
     id: "5",
@@ -136,8 +187,11 @@ export const products: Product[] = [
     price: 70,
     image: accessoriesImage,
     category: "Accessoires",
+    description: "Casquette officielle Atlas Lions avec broderie",
+    stock: 100,
     customizable: false,
     featured: true,
+    // ❌ PAS de availableSizes
   },
   {
     id: "6",
@@ -145,17 +199,23 @@ export const products: Product[] = [
     price: 70,
     image: siffletImage,
     category: "Accessoires",
+    description: "Sifflet officiel des supporters",
+    stock: 120,
     customizable: false,
     featured: false,
+    // ❌ PAS de availableSizes
   },
-    {
+  {
     id: "7",
-    name: "Chapeau Bob ",
+    name: "Chapeau Bob",
     price: 70,
     image: biria1Image,
     category: "Accessoires",
+    description: "Chapeau Bob aux couleurs du Maroc",
+    stock: 90,
     customizable: false,
     featured: false,
+    // ❌ PAS de availableSizes
   },
 ];
 
@@ -163,21 +223,16 @@ export const products: Product[] = [
 // FONCTIONS UTILITAIRES
 // ============================================
 
-export const getFeaturedProducts = (): Product[] => {
-  return products.filter((product) => product.featured);
-};
+export const getFeaturedProducts = () => products.filter((p) => p.featured);
 
-export const getAllProducts = (): Product[] => {
-  return products;
-};
+export const getAllProducts = () => products;
 
-export const getProductById = (id: string): Product | undefined => {
-  return products.find((product) => product.id === id);
-};
+export const getProductById = (id: string) =>
+  products.find((product) => product.id === id);
 
-export const getProductsByCategory = (category: string): Product[] => {
+export const getProductsByCategory = (category: string) => {
   if (category === "Tous") return products;
-  return products.filter((product) => product.category === category);
+  return products.filter((p) => p.category === category);
 };
 
 export const getCategories = (): string[] => {

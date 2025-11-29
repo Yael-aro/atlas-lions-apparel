@@ -1,19 +1,26 @@
 import { Facebook, Instagram, Mail, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import Logo from "@/assets/logo.png"; // ➤ ajout du logo
 
 export const Footer = () => {
   return (
     <footer className="bg-muted/50 border-t border-border">
       <div className="container px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold gradient-hero bg-clip-text text-transparent">
-              CAN 2025 MAROC
-            </h3>
+            {/* ➤ Votre LOGO */}
+            <img
+              src={Logo}
+              alt="CAN 2025 Logo"
+              className="w-32 object-contain"
+            />
+
             <p className="text-sm text-muted-foreground">
               Produits premium pour supporters passionnés. Qualité supérieure garantie.
             </p>
+
             <div className="flex space-x-4">
               <a href="#" className="text-muted-foreground hover:text-primary transition-smooth">
                 <Facebook className="h-5 w-5" />
@@ -75,7 +82,7 @@ export const Footer = () => {
               <li className="flex items-center space-x-2 text-muted-foreground">
                 <Phone className="h-4 w-4" />
                 <span>
-                  +212 624-740054 <br/>+212 623-461209                   
+                  +212 624-740054 <br /> +212 623-461209
                 </span>
               </li>
               <li className="flex items-center space-x-2 text-muted-foreground">
@@ -84,6 +91,7 @@ export const Footer = () => {
               </li>
             </ul>
           </div>
+
         </div>
 
         {/* Disclaimer */}
@@ -97,6 +105,7 @@ export const Footer = () => {
             © 2025 CAN 2025 Shop. Tous droits réservés.
           </p>
         </div>
+
       </div>
     </footer>
   );
