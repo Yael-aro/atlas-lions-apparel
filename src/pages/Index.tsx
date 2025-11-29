@@ -7,21 +7,17 @@ import { Link } from "react-router-dom";
 import { getFeaturedProducts } from "@/data/products";
 import { useState, useEffect } from "react";
 
-// ✅ Importe toutes les images pour le carrousel
 import heroImage1 from "@/assets/hero-can-2025.jpg";
 import heroImage2 from "@/assets/yt.jpg";
-
 
 const Index = () => {
   const featuredProducts = getFeaturedProducts();
   
-  // ✅ Tableau d'images pour le carrousel
   const heroImages = [heroImage1, heroImage2];
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // ✅ Change l'image automatiquement toutes les 5 secondes
   useEffect(() => {
     const interval = setInterval(() => {
       setIsTransitioning(true);
@@ -39,30 +35,31 @@ const Index = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section avec carrousel */}
-        <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-          {/* Images en arrière-plan avec transition */}
-          <div className="absolute inset-0 z-0">
+        {/* Hero Section */}
+        <section className="relative min-h-[500px] md:min-h-[700px] flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800">
+          <div className="absolute inset-0 z-0 flex items-center justify-center">
             {heroImages.map((image, index) => (
               <div
                 key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
+                className={`absolute inset-0 transition-opacity duration-1000 flex items-center justify-center ${
                   index === currentImageIndex && !isTransitioning ? "opacity-100" : "opacity-0"
                 }`}
               >
                 <img 
                   src={image} 
                   alt={`CAN 2025 Morocco ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain max-w-full max-h-full"
+                  style={{ 
+                    objectFit: 'contain',
+                    objectPosition: 'center'
+                  }}
                 />
               </div>
             ))}
             
-            {/* ✅ MODIFIÉ - Overlay noir subtil pour lisibilité (optionnel) */}
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/60" />
           </div>
 
-          {/* Indicateurs de pagination (points) */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {heroImages.map((_, index) => (
               <button
@@ -82,12 +79,12 @@ const Index = () => {
             ))}
           </div>
           
-          <div className="container relative z-10 px-4">
+          <div className="container relative z-10 px-4 py-12 md:py-20">
             <div className="max-w-3xl mx-auto text-center text-white">
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in drop-shadow-lg">
+              <h1 className="text-4xl md:text-7xl font-bold mb-6 animate-fade-in drop-shadow-lg">
                 CAN2025 JERSEYS
               </h1>
-              <p className="text-xl md:text-2xl mb-8 text-white/95 drop-shadow-md">
+              <p className="text-lg md:text-2xl mb-8 text-white/95 drop-shadow-md">
                 Soutenez les Atlas Lions avec style. Produits premium personnalisables.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -98,7 +95,8 @@ const Index = () => {
                   </Button>
                 </Link>
                 <Link to="/personnalisation">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8">
+                  {/* ✅ CORRECTION 1 : Bouton visible avec fond rouge */}
+                  <Button size="lg" className="bg-primary text-white hover:bg-primary/90 border-2 border-white shadow-glow text-lg px-8">
                     <Sparkles className="mr-2 h-5 w-5" />
                     Personnaliser
                   </Button>
@@ -109,7 +107,7 @@ const Index = () => {
         </section>
 
         {/* Features */}
-        <section className="py-16 bg-muted/30">
+        <section className="py-12 md:py-16 bg-muted/30">
           <div className="container px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center space-y-4">
@@ -146,11 +144,11 @@ const Index = () => {
         </section>
 
         {/* Featured Products */}
-        <section className="py-16">
+        <section className="py-12 md:py-16">
           <div className="container px-4">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4">Produits Vedettes</h2>
-              <p className="text-xl text-muted-foreground">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Produits Vedettes</h2>
+              <p className="text-lg md:text-xl text-muted-foreground">
                 Découvrez notre sélection de produits premium
               </p>
             </div>
@@ -172,15 +170,18 @@ const Index = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-20 gradient-hero">
-          <div className="container px-4">
+        {/* ✅ CORRECTION 2 : CTA Section avec dégradé ROUGE → VERT */}
+        <section className="py-16 md:py-20 relative overflow-hidden">
+          {/* Dégradé rouge → vert */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#C8102E] via-[#C8102E] to-[#006233]" />
+          
+          <div className="container px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center text-white">
               <Shield className="h-16 w-16 mx-auto mb-6" />
-              <h2 className="text-4xl font-bold mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
                 Commandez en toute confiance
               </h2>
-              <p className="text-xl mb-8 text-white/90">
+              <p className="text-lg md:text-xl mb-8 text-white/95">
                 Finalisation simple via WhatsApp ou Email. Paiement sécurisé à la livraison ou par virement bancaire.
               </p>
               <Link to="/boutique">
