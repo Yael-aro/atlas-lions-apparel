@@ -338,17 +338,6 @@ const Panier = () => {
                     
                     <div className="space-y-3">
                       <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                          placeholder="Code promo"
-                          className="flex-1 px-3 py-2 border rounded-md"
-                        />
-                        <Button onClick={applyPromoCode} variant="outline" size="sm">
-                          <Tag className="h-4 w-4 mr-1" />
-                          Appliquer
-                        </Button>
                       </div>
                     </div>
 
