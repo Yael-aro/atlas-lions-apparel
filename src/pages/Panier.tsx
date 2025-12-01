@@ -96,13 +96,10 @@ const Panier = () => {
     const loadingToast = toast.loading('⏳ Enregistrement de votre commande...');
 
     try {
-      const { count, error: countError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
-      
-      if (countError) throw countError;
-      
-      const orderNumber = `CMD-${String((count || 0) + 1).padStart(4, '0')}`;
+      // ✅ GÉNÉRATION UNIQUE DU NUMÉRO DE COMMANDE
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const orderNumber = `CMD-${timestamp}-${random}`;
       
       const orderPromises = items.map(async (item) => {
         let personalizationData = null;
@@ -117,29 +114,28 @@ const Panier = () => {
           }
         }
 
-        // ✅ CORRECTION : Détecte la bonne catégorie
         const isJersey = item.category === 'Maillots' || item.category === 'Maillot';
         const defaultColor = isJersey ? 'red' : 'white';
 
-const orderData: any = {
-  order_number: `${orderNumber}-${item.id}`,
-  personalization_id: item.id || `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-  customer_name: customerName.trim(),
-  customer_phone: customerPhone.replace(/\s/g, ''),
-  customer_address: customerAddress.trim() || '',
-  customer_city: customerCity.trim() || '',
-  
-  // ✅ Infos produit pour dashboard
-  product_name: item.name,
-  product_price: item.price,
-  product_image_url: item.image,
-  product_category: item.category,
-  product_size: item.size || '', // ✅ NOUVEAU
-  
-  jersey_color: defaultColor,
-  total_price: item.price * item.quantity,
-  status: 'pending',
-  notes: `📦 ${item.name} - Quantité: ${item.quantity} - Catégorie: ${item.category}${item.size ? ` - Taille: ${item.size}` : ''}${promoCode ? ` - Code: ${promoCode}` : ''}`,
+        const orderData: any = {
+          order_number: `${orderNumber}-${item.id}`,
+          personalization_id: item.id || `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          customer_name: customerName.trim(),
+          customer_phone: customerPhone.replace(/\s/g, ''),
+          customer_address: customerAddress.trim() || '',
+          customer_city: customerCity.trim() || '',
+          
+          product_name: item.name,
+          product_price: item.price,
+          product_image_url: item.image,
+          product_category: item.category,
+          product_size: item.size || '',
+          
+          jersey_color: defaultColor,
+          total_price: item.price * item.quantity,
+          status: 'pending',
+          notes: `📦 ${item.name} - Quantité: ${item.quantity} - Catégorie: ${item.category}${item.size ? ` - Taille: ${item.size}` : ''}${promoCode ? ` - Code: ${promoCode}` : ''}`,
+          
           name_enabled: false,
           name_text: '',
           name_font: 'montserrat',
@@ -292,26 +288,25 @@ const orderData: any = {
                           }}
                         />
                         <div className="flex-1">
-                         <div className="flex justify-between items-start mb-2">
-  <div>
-    <h3 className="text-xl font-bold">{item.name}</h3>
-    <p className="text-sm text-muted-foreground">{item.category}</p>
-    {/* ✅ AFFICHE LA TAILLE si elle existe */}
-    {item.size && (
-      <p className="text-sm font-semibold text-primary mt-1">
-        Taille: {item.size}
-      </p>
-    )}
-  </div>
-  <Button 
-    variant="ghost" 
-    size="sm" 
-    onClick={() => handleRemoveItem(item.id, item.name)}
-    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-  >
-    <Trash2 className="h-4 w-4" />
-  </Button>
-</div>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="text-xl font-bold">{item.name}</h3>
+                              <p className="text-sm text-muted-foreground">{item.category}</p>
+                              {item.size && (
+                                <p className="text-sm font-semibold text-primary mt-1">
+                                  Taille: {item.size}
+                                </p>
+                              )}
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleRemoveItem(item.id, item.name)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center gap-3">
                               <Button 
