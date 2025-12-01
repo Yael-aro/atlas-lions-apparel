@@ -167,80 +167,48 @@ const Personnalisation = () => {
   };
 
   // ✅ Gestion du drag & drop (DÉSACTIVÉ SUR MOBILE)
-  // ✅ Gestion du drag & drop AVEC SUPPORT TACTILE
-const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
-  setDraggedElement(element);
-  setIsSaved(false);
-  e.preventDefault();
-};
-
-const handleTouchStart = (element: "text" | "number" | "slogan") => (e: React.TouchEvent) => {
-  setDraggedElement(element);
-  setIsSaved(false);
-  e.preventDefault();
-};
-
-const handleMouseMove = (e: MouseEvent) => {
-  if (draggedElement && previewRef.current) {
-    const rect = previewRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    const constrainedX = Math.max(10, Math.min(90, x));
-    const constrainedY = Math.max(10, Math.min(90, y));
-    
-    if (draggedElement === "text") {
-      setTextPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "number") {
-      setNumberPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "slogan") {
-      setSloganPosition({ x: constrainedX, y: constrainedY });
-    }
-  }
-};
-
-const handleTouchMove = (e: TouchEvent) => {
-  if (draggedElement && previewRef.current && e.touches.length > 0) {
-    const touch = e.touches[0];
-    const rect = previewRef.current.getBoundingClientRect();
-    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-    const y = ((touch.clientY - rect.top) / rect.height) * 100;
-    
-    const constrainedX = Math.max(10, Math.min(90, x));
-    const constrainedY = Math.max(10, Math.min(90, y));
-    
-    if (draggedElement === "text") {
-      setTextPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "number") {
-      setNumberPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "slogan") {
-      setSloganPosition({ x: constrainedX, y: constrainedY });
-    }
-  }
-};
-
-const handleMouseUp = () => {
-  setDraggedElement(null);
-};
-
-const handleTouchEnd = () => {
-  setDraggedElement(null);
-};
-
-useEffect(() => {
-  if (draggedElement) {
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("touchmove", handleTouchMove);
-    window.addEventListener("touchend", handleTouchEnd);
-  }
-  return () => {
-    window.removeEventListener("mousemove", handleMouseMove);
-    window.removeEventListener("mouseup", handleMouseUp);
-    window.removeEventListener("touchmove", handleTouchMove);
-    window.removeEventListener("touchend", handleTouchEnd);
+  const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
+    if (isMobile) return; // ✅ BLOQUÉ SUR MOBILE
+    setDraggedElement(element);
+    setIsSaved(false);
+    e.preventDefault();
   };
-}, [draggedElement]);
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isMobile) return; // ✅ BLOQUÉ SUR MOBILE
+    if (draggedElement && previewRef.current) {
+      const rect = previewRef.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      
+      const constrainedX = Math.max(10, Math.min(90, x));
+      const constrainedY = Math.max(10, Math.min(90, y));
+      
+      if (draggedElement === "text") {
+        setTextPosition({ x: constrainedX, y: constrainedY });
+      } else if (draggedElement === "number") {
+        setNumberPosition({ x: constrainedX, y: constrainedY });
+      } else if (draggedElement === "slogan") {
+        setSloganPosition({ x: constrainedX, y: constrainedY });
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDraggedElement(null);
+  };
+
+  useEffect(() => {
+    if (draggedElement && !isMobile) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [draggedElement, isMobile]);
+
   // Gestion du zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -563,76 +531,73 @@ useEffect(() => {
                       />
                       
                       {/* Nom */}
-{customText && (
-  <div 
-    ref={textRef}
-    onMouseDown={handleMouseDown("text")}
-    onTouchStart={handleTouchStart("text")}
-    className="absolute text-center select-none"
-    style={{ 
-      left: `${textPosition.x}%`,
-      top: `${textPosition.y}%`,
-      transform: "translate(-50%, -50%)",
-      cursor: "move",
-      fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
-      color: colors.find(c => c.value === selectedColor)?.hex,
-      fontSize: isMobile ? "1.5rem" : "2rem",
-      fontWeight: "bold",
-      textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-      WebkitTextStroke: "1px rgba(0,0,0,0.3)",
-    }}
-  >
-    {customText}
-  </div>
-)}
-
-{/* Numéro */}
-{customNumber && (
-  <div 
-    ref={numberRef}
-    onMouseDown={handleMouseDown("number")}
-    onTouchStart={handleTouchStart("number")}
-    className="absolute text-center select-none"
-    style={{ 
-      left: `${numberPosition.x}%`,
-      top: `${numberPosition.y}%`,
-      transform: "translate(-50%, -50%)",
-      cursor: "move",
-      fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
-      color: colors.find(c => c.value === selectedColor)?.hex,
-      fontSize: isMobile ? "3rem" : "5rem",
-      fontWeight: "bold",
-      textShadow: "3px 3px 6px rgba(0,0,0,0.7)",
-      WebkitTextStroke: "2px rgba(0,0,0,0.3)",
-    }}
-  >
-    {customNumber}
-  </div>
-)}
-
-{/* Slogan */}
-{sloganEnabled && sloganText && (
-  <div 
-    ref={sloganRef}
-    onMouseDown={handleMouseDown("slogan")}
-    onTouchStart={handleTouchStart("slogan")}
-    className="absolute text-center select-none"
-    style={{ 
-      left: `${sloganPosition.x}%`,
-      top: `${sloganPosition.y}%`,
-      transform: "translate(-50%, -50%)",
-      cursor: "move",
-      fontFamily: fonts.find(f => f.value === sloganFont)?.fontFamily,
-      color: colors.find(c => c.value === sloganColor)?.hex,
-      fontSize: sloganSizes.find(s => s.value === sloganSize)?.fontSize,
-      fontWeight: "bold",
-      textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-      WebkitTextStroke: "0.5px rgba(0,0,0,0.3)",
-    }}
-  >
-    {sloganText}
-  </div>
-)}
+                      {customText && (
+                        <div 
+                          ref={textRef}
+                          onMouseDown={handleMouseDown("text")}
+                          className="absolute text-center select-none"
+                          style={{ 
+                            left: `${textPosition.x}%`,
+                            top: `${textPosition.y}%`,
+                            transform: "translate(-50%, -50%)",
+                            cursor: isMobile ? "default" : "move",
+                            fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
+                            color: colors.find(c => c.value === selectedColor)?.hex,
+                            fontSize: isMobile ? "1.5rem" : "2rem",
+                            fontWeight: "bold",
+                            textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+                            WebkitTextStroke: "1px rgba(0,0,0,0.3)",
+                          }}
+                        >
+                          {customText}
+                        </div>
+                      )}
+                      
+                      {/* Numéro */}
+                      {customNumber && (
+                        <div 
+                          ref={numberRef}
+                          onMouseDown={handleMouseDown("number")}
+                          className="absolute text-center select-none"
+                          style={{ 
+                            left: `${numberPosition.x}%`,
+                            top: `${numberPosition.y}%`,
+                            transform: "translate(-50%, -50%)",
+                            cursor: isMobile ? "default" : "move",
+                            fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
+                            color: colors.find(c => c.value === selectedColor)?.hex,
+                            fontSize: isMobile ? "3rem" : "5rem",
+                            fontWeight: "bold",
+                            textShadow: "3px 3px 6px rgba(0,0,0,0.7)",
+                            WebkitTextStroke: "2px rgba(0,0,0,0.3)",
+                          }}
+                        >
+                          {customNumber}
+                        </div>
+                      )}
+                      
+                      {/* Slogan */}
+                      {sloganEnabled && sloganText && (
+                        <div 
+                          ref={sloganRef}
+                          onMouseDown={handleMouseDown("slogan")}
+                          className="absolute text-center select-none"
+                          style={{ 
+                            left: `${sloganPosition.x}%`,
+                            top: `${sloganPosition.y}%`,
+                            transform: "translate(-50%, -50%)",
+                            cursor: isMobile ? "default" : "move",
+                            fontFamily: fonts.find(f => f.value === sloganFont)?.fontFamily,
+                            color: colors.find(c => c.value === sloganColor)?.hex,
+                            fontSize: sloganSizes.find(s => s.value === sloganSize)?.fontSize,
+                            fontWeight: "bold",
+                            textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+                            WebkitTextStroke: "0.5px rgba(0,0,0,0.3)",
+                          }}
+                        >
+                          {sloganText}
+                        </div>
+                      )}
                     </div>
                   </div>
 
