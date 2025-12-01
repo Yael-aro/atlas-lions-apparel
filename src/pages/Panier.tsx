@@ -92,11 +92,9 @@ const Panier = () => {
     }
 
     setIsSubmitting(true);
-
     const loadingToast = toast.loading('⏳ Enregistrement de votre commande...');
 
     try {
-      // ✅ GÉNÉRATION UNIQUE DU NUMÉRO DE COMMANDE
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
       const orderNumber = `CMD-${timestamp}-${random}`;

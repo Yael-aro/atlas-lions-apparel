@@ -49,15 +49,12 @@ export const ProductCard = ({
     availableSizes && availableSizes.length > 0 ? availableSizes[0] : ""
   );
 
-  // ✅ CALCUL DES IMAGES À AFFICHER
   const displayImages = selectedVariant?.images || images || [image];
 
-  // ✅ RESET index quand on change de variante
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [selectedVariant]);
 
-  // Image actuelle à afficher
   const currentImage = displayImages[currentImageIndex] || displayImages[0] || image;
 
   const handlePrevImage = (e: React.MouseEvent) => {
@@ -65,7 +62,6 @@ export const ProductCard = ({
     e.preventDefault();
     setCurrentImageIndex((prev) => {
       const newIndex = prev === 0 ? displayImages.length - 1 : prev - 1;
-      console.log('⬅️ Prev:', prev, '→', newIndex, 'Total:', displayImages.length);
       return newIndex;
     });
   };
@@ -75,13 +71,11 @@ export const ProductCard = ({
     e.preventDefault();
     setCurrentImageIndex((prev) => {
       const newIndex = prev === displayImages.length - 1 ? 0 : prev + 1;
-      console.log('➡️ Next:', prev, '→', newIndex, 'Total:', displayImages.length);
       return newIndex;
     });
   };
 
   const handleVariantChange = (variant: ColorVariant) => {
-    console.log('🎨 Changement couleur:', variant.colorName, 'Images:', variant.images?.length);
     setSelectedVariant(variant);
   };
 
@@ -129,16 +123,17 @@ export const ProductCard = ({
         <div className="relative overflow-hidden rounded-t-lg">
           <div className="relative w-full h-64">
             <img
-              key={currentImage} // ✅ Force re-render quand l'image change
+              key={currentImage}
               src={currentImage}
               alt={`${name} - Image ${currentImageIndex + 1}`}
+              loading="lazy"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               onError={(e) => {
                 e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%23dc2626' width='400' height='400'/%3E%3Ctext x='200' y='200' text-anchor='middle' dy='.3em' fill='white' font-size='80'%3E🦁%3C/text%3E%3C/svg%3E";
               }}
+              style={{ minHeight: '256px' }}
             />
 
-            {/* ✅ FLÈCHES (toujours visibles si plusieurs images) */}
             {displayImages.length > 1 && (
               <>
                 <button
@@ -158,7 +153,6 @@ export const ProductCard = ({
                   <ChevronRight className="h-5 w-5 text-gray-800" />
                 </button>
 
-                {/* ✅ INDICATEURS (DOTS) */}
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                   {displayImages.map((_, index) => (
                     <button
@@ -166,7 +160,6 @@ export const ProductCard = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        console.log('🔘 Clic dot:', index);
                         setCurrentImageIndex(index);
                       }}
                       type="button"
@@ -183,7 +176,6 @@ export const ProductCard = ({
             )}
           </div>
 
-          {/* Badges */}
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="font-bold text-sm">4.8</span>
@@ -216,7 +208,6 @@ export const ProductCard = ({
             )}
           </div>
 
-          {/* ✅ SÉLECTEUR DE COULEUR */}
           {hasColorVariants && colorVariants && colorVariants.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-semibold">
@@ -244,7 +235,6 @@ export const ProductCard = ({
             </div>
           )}
 
-          {/* ✅ SÉLECTEUR DE TAILLE */}
           {availableSizes && availableSizes.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-semibold">

@@ -21,7 +21,6 @@ export const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Ferme le menu mobile quand on change de page
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
@@ -42,7 +41,6 @@ export const Header = () => {
     >
       <div className="container px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center group">
             <img
               src={logoImage}
@@ -51,7 +49,6 @@ export const Header = () => {
             />
           </Link>
 
-          {/* ✅ NAVIGATION DESKTOP */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
@@ -73,9 +70,7 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* ✅ PANIER + MENU HAMBURGER */}
           <div className="flex items-center gap-4">
-            {/* Panier */}
             <Link to="/panier">
               <Button variant="outline" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
@@ -87,7 +82,6 @@ export const Header = () => {
               </Button>
             </Link>
 
-            {/* ✅ MENU HAMBURGER (Mobile uniquement) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -102,7 +96,6 @@ export const Header = () => {
           </div>
         </div>
 
-        {/* ✅ MENU MOBILE (Dropdown) */}
         {isMobileMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 border-t pt-4 animate-in slide-in-from-top">
             <div className="flex flex-col gap-4">

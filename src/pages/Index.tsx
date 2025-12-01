@@ -10,6 +10,13 @@ import { useState, useEffect } from "react";
 import heroImage1 from "@/assets/hero-can-2025.jpg";
 import heroImage2 from "@/assets/yt.jpg";
 
+const preloadImages = (imageUrls: string[]) => {
+  imageUrls.forEach((url) => {
+    const img = new Image();
+    img.src = url;
+  });
+};
+
 const Index = () => {
   const featuredProducts = getFeaturedProducts();
   
@@ -17,6 +24,10 @@ const Index = () => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    preloadImages(heroImages);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -35,7 +46,6 @@ const Index = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="relative min-h-[500px] md:min-h-[700px] flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800">
           <div className="absolute inset-0 z-0 flex items-center justify-center">
             {heroImages.map((image, index) => (
@@ -48,6 +58,8 @@ const Index = () => {
                 <img 
                   src={image} 
                   alt={`CAN 2025 Morocco ${index + 1}`}
+                  loading="eager"
+                  fetchPriority="high"
                   className="w-full h-full object-contain max-w-full max-h-full"
                   style={{ 
                     objectFit: 'contain',
@@ -95,7 +107,6 @@ const Index = () => {
                   </Button>
                 </Link>
                 <Link to="/personnalisation">
-                  {/* ✅ CORRECTION 1 : Bouton visible avec fond rouge */}
                   <Button size="lg" className="bg-primary text-white hover:bg-primary/90 border-2 border-white shadow-glow text-lg px-8">
                     <Sparkles className="mr-2 h-5 w-5" />
                     Personnaliser
@@ -106,7 +117,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Features */}
         <section className="py-12 md:py-16 bg-muted/30">
           <div className="container px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -143,7 +153,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Featured Products */}
         <section className="py-12 md:py-16">
           <div className="container px-4">
             <div className="text-center mb-12">
@@ -170,9 +179,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* ✅ CORRECTION 2 : CTA Section avec dégradé ROUGE → VERT */}
         <section className="py-16 md:py-20 relative overflow-hidden">
-          {/* Dégradé rouge → vert */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#C8102E] via-[#C8102E] to-[#006233]" />
           
           <div className="container px-4 relative z-10">

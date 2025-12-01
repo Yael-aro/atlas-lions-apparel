@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { CartProvider } from "@/contexts/CartContext.tsx"; // ✅ AJOUTÉ
+import { CartProvider } from "@/contexts/CartContext.tsx";
 import Index from "./pages/Index";
 import Boutique from "./pages/Boutique";
 import Personnalisation from "./pages/Personnalisation";
@@ -14,14 +14,15 @@ import FAQ from "./pages/FAQ";
 import Livraison from "./pages/Livraison";
 import Conditions from "./pages/Conditions";
 import NotFound from "./pages/NotFound";
-import AdminDashboard from '@/pages/AdminDashboard';
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider> {/* ✅ AJOUTÉ - Enveloppe toute l'app */}
+      <CartProvider>
         <Toaster />
         <Sonner />
         <HashRouter>
@@ -35,8 +36,10 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/livraison" element={<Livraison />} />
             <Route path="/conditions" element={<Conditions />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
-            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </HashRouter>
       </CartProvider>
