@@ -10,13 +10,13 @@ import siffletImage from "@/assets/sifflet.jpg";
 import backImage from "@/assets/back.jpg";
 import flagImage from "@/assets/flag.jpg";
 import MinatureImage from "@/assets/minature.jpg";
-import jerseyWhiteImage from "@/assets/jerseyWhiteImage.jpg";
-import backWhiteImage from "@/assets/backWhiteImage.jpg";
+import jerseyWhiteImage from "@/assets/jerseywhiteimage.jpg";
+import backWhiteImage from "@/assets/backwhiteimage.jpg";
 import shortWhiteImage from "@/assets/short-white.jpg";
 import biriaImage from "@/assets/biria.jpg";
 import biria1Image from "@/assets/biria1.jpg";
 // ✅ AJOUTE l'import de la miniature blanche
-import MinatureWhiteImage from "@/assets/minatureWhite.jpg"; // ⚠️ Adapte le nom selon ton fichier
+import MinatureWhiteImage from "@/assets/minaturewhite.jpg"; // ⚠️ Adapte le nom selon ton fichier
 
 // ============================================
 // TYPES

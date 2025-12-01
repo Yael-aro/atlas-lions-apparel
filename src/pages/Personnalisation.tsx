@@ -13,9 +13,9 @@ import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import jerseyRedImage from "@/assets/jersey-red.jpg";
-import jerseyWhiteImage from "@/assets/jerseyWhiteImage.jpg";
+import jerseyWhiteImage from "@/assets/jerseywhiteimage.jpg";
 import backRedImage from "@/assets/back.jpg";
-import backWhiteImage from "@/assets/backWhiteImage.jpg";
+import backWhiteImage from "@/assets/backwhiteimage.jpg";
 import { supabase } from '@/lib/supabase';
 
 // Type pour les données de personnalisation complètes
