@@ -10,13 +10,20 @@ import siffletImage from "@/assets/sifflet.jpg";
 import backImage from "@/assets/back.jpg";
 import flagImage from "@/assets/flag.jpg";
 import MinatureImage from "@/assets/minature.jpg";
-import jerseyWhiteImage from "@/assets/jerseyWhiteImage.jpg";
-import backWhiteImage from "@/assets/backWhiteImage.jpg";
+
+// ⚠️ corrige : le fichier est "jerseywhiteimage.jpg"
+import jerseywhiteImage from "@/assets/jerseywhiteimage.jpg";
+
+// ⚠️ corrige : le fichier est "backwhiteimage.jpg"
+import backWhiteImage from "@/assets/backwhiteimage.jpg";
+
 import shortWhiteImage from "@/assets/short-white.jpg";
 import biriaImage from "@/assets/biria.jpg";
 import biria1Image from "@/assets/biria1.jpg";
-// ✅ AJOUTE l'import de la miniature blanche
-import MinatureWhiteImage from "@/assets/minatureWhite.jpg"; // ⚠️ Adapte le nom selon ton fichier
+
+// ⚠️ corrige : le fichier est "minaturewhite.jpg"
+import MinatureWhiteImage from "@/assets/minaturewhite.jpg";
+
 
 // ============================================
 // TYPES
@@ -125,7 +132,7 @@ export const products: Product[] = [
       image: MinatureWhiteImage, // ⚠️ Change par MinatureWhiteImage si tu l'as
       images: [
         MinatureWhiteImage,    // ⚠️ Change par MinatureWhiteImage si tu l'as
-        jerseyImage,      // Reste pareil
+        jerseywhiteImage,      // Reste pareil
         biria1Image,      // Reste pareil
         flagImage,        // Reste pareil
         echapeImage,      // Reste pareil
