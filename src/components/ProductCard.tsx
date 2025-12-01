@@ -112,7 +112,7 @@ export const ProductCard = ({
       description: `${price} DH`,
       action: {
         label: "Voir le panier",
-        onClick: () => window.location.href = "/#/panier"
+        onClick: () => window.location.href = "/panier"
       }
     });
   };
