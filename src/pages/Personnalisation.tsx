@@ -703,7 +703,7 @@ useEffect(() => {
 
                     {/* Numéro */}
                     <div className="space-y-2">
-                      <Label htmlFor="customNumber">Numéro (1-99)</Label>
+                      <Label htmlFor="customNumber">Numéro</Label>
                       <Input
                         id="customNumber"
                         type="number"
