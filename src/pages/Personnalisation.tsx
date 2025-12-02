@@ -708,11 +708,11 @@ useEffect(() => {
                         id="customNumber"
                         type="number"
                         min="1"
-                        max="99"
+                        max="2050"
                         value={customNumber}
                         onChange={(e) => {
                           const val = e.target.value;
-                          if (val === "" || (parseInt(val) >= 1 && parseInt(val) <= 99)) {
+                          if (val === "" || (parseInt(val) >= 1 && parseInt(val) <= 2050)) {
                             setCustomNumber(val);
                           }
                         }}
