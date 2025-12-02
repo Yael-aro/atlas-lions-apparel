@@ -427,7 +427,7 @@ const Panier = () => {
                     setCustomerPhone(e.target.value);
                     if (phoneError) validatePhone(e.target.value);
                   }}
-                  placeholder="06 12 34 56 78" 
+                  placeholder="votre numéro (06XXXXXXXX)" 
                   className={`w-full px-4 py-3 border-2 rounded-lg transition-all ${
                     phoneError ? 'border-red-500' : 'border-gray-200 focus:border-primary'
                   } focus:ring-2 focus:ring-primary/20`}
@@ -441,7 +441,7 @@ const Panier = () => {
                   type="text" 
                   value={customerCity} 
                   onChange={(e) => setCustomerCity(e.target.value)}
-                  placeholder="Ex: Casablanca" 
+                  placeholder="votre ville (ex: Casablanca)" 
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -451,7 +451,7 @@ const Panier = () => {
                 <textarea 
                   value={customerAddress} 
                   onChange={(e) => setCustomerAddress(e.target.value)}
-                  placeholder="Ex: 123 Rue Mohammed V" 
+                  placeholder="votre adresse complète" 
                   rows={3}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                 />
