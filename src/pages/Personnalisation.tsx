@@ -972,7 +972,7 @@ useEffect(() => {
                   type="text"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Ex: Zakaria Mihrab"
+                  placeholder="Nom complet"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -983,7 +983,7 @@ useEffect(() => {
                   type="tel"
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="06 12 34 56 78"
+                  placeholder="votre numéro de téléphone"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -994,7 +994,7 @@ useEffect(() => {
                   type="text"
                   value={clientCity}
                   onChange={(e) => setClientCity(e.target.value)}
-                  placeholder="Ex: Casablanca"
+                  placeholder="Ville"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -1004,7 +1004,7 @@ useEffect(() => {
                 <textarea
                   value={clientAddress}
                   onChange={(e) => setClientAddress(e.target.value)}
-                  placeholder="Ex: 123 Rue Mohammed V"
+                  placeholder="Adresse complète"
                   rows={3}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                 />
