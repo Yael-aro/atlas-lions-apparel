@@ -83,8 +83,8 @@ export const products: Product[] = [
     {
       color: "#FFFFFF",
       colorName: "Blanc",
-      image: jerseyWhiteImage,
-      images: [jerseyWhiteImage, backWhiteImage], // ✅ Face PUIS Dos blanc
+      image: jerseywhiteImage,
+      images: [jerseywhiteImage, backWhiteImage], // ✅ Face PUIS Dos blanc
     },
   ],
 },
