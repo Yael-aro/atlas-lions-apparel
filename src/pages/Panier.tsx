@@ -413,7 +413,7 @@ const Panier = () => {
                   type="text" 
                   value={customerName} 
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Ex: Zakaria Mihrab" 
+                  placeholder="Nom complet" 
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
