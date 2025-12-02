@@ -13,7 +13,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import jerseyRedImage from "@/assets/jersey-red.jpg";
-import jerseywhiteImage from "@/assets/jerseywhiteImage.jpg";
+import jerseywhiteImage from "@/assets/jerseywhiteimage.jpg";
 import backRedImage from "@/assets/back.jpg";
 import backWhiteImage from "@/assets/backwhiteimage.jpg";
 import { supabase } from '@/lib/supabase';
