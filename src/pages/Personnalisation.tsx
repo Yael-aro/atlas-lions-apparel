@@ -707,12 +707,12 @@ useEffect(() => {
                       <Input
                         id="customNumber"
                         type="number"
-                        min="1"
+                        min="0"
                         max="2050"
                         value={customNumber}
                         onChange={(e) => {
                           const val = e.target.value;
-                          if (val === "" || (parseInt(val) >= 1 && parseInt(val) <= 2050)) {
+                          if (val === "" || (parseInt(val) >= 0 && parseInt(val) <= 2050)) {
                             setCustomNumber(val);
                           }
                         }}
