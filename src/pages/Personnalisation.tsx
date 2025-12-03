@@ -9,7 +9,23 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, ShoppingCart, Palette, Type, MapPin } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Save, 
+  ShoppingCart, 
+  Palette, 
+  Type, 
+  MapPin, 
+  Ruler, 
+  Edit3, 
+  Hash, 
+  MessageSquare, 
+  Coins,
+  ClipboardList,
+  CheckCircle,
+  Loader2,
+  Info
+} from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { supabase } from '@/lib/supabase';
@@ -209,8 +225,9 @@ const Personnalisation = () => {
 
     localStorage.setItem("personalization-1", JSON.stringify(customizationData));
     setIsSaved(true);
-    toast.success("✅ Personnalisation enregistrée !", {
+    toast.success("Personnalisation enregistrée !", {
       description: "Remplissez vos coordonnées pour commander",
+      icon: <CheckCircle className="h-4 w-4" />
     });
   };
 
@@ -230,7 +247,9 @@ const Personnalisation = () => {
     }
 
     setIsSubmitting(true);
-    const loadingToast = toast.loading('⏳ Enregistrement de votre commande...');
+    const loadingToast = toast.loading('Enregistrement de votre commande...', {
+      icon: <Loader2 className="h-4 w-4 animate-spin" />
+    });
 
     try {
       const timestamp = Date.now();
@@ -295,22 +314,26 @@ const Personnalisation = () => {
       if (error) throw error;
 
       toast.dismiss(loadingToast);
-      toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
+      toast.success(`Commande ${orderNumber} enregistrée !`, {
         duration: 5000,
-        description: `Total: ${totalPrice} DH`
+        description: `Total: ${totalPrice} DH`,
+        icon: <CheckCircle className="h-4 w-4" />
       });
 
       localStorage.removeItem("personalization-1");
 
       setTimeout(() => {
-        toast.info("📦 Confirmation par téléphone sous 24h", { duration: 5000 });
+        toast.info("Confirmation par téléphone sous 24h", { 
+          duration: 5000,
+          icon: <Info className="h-4 w-4" />
+        });
         navigate('/');
       }, 1500);
 
     } catch (error: any) {
       toast.dismiss(loadingToast);
       console.error('Erreur commande:', error);
-      toast.error("❌ Erreur: " + (error.message || "Veuillez réessayer"));
+      toast.error("Erreur: " + (error.message || "Veuillez réessayer"));
     } finally {
       setIsSubmitting(false);
     }
@@ -454,8 +477,9 @@ const Personnalisation = () => {
                   )}
                 </div>
 
-                <p className="text-sm text-muted-foreground mt-4 text-center">
-                  💡 {window.innerWidth > 768 
+                <p className="text-sm text-muted-foreground mt-4 text-center flex items-center justify-center gap-1">
+                  <Info className="h-4 w-4" />
+                  {window.innerWidth > 768 
                     ? "Glissez les éléments pour les déplacer • Molette pour zoomer" 
                     : "Glissez les éléments pour les déplacer"}
                 </p>
@@ -466,7 +490,10 @@ const Personnalisation = () => {
               <Card className="shadow-lg">
                 <CardContent className="p-6 space-y-6">
                   <div>
-                    <h3 className="text-xl font-bold mb-4">🎨 Couleur du maillot</h3>
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <Palette className="h-5 w-5" />
+                      Couleur du maillot
+                    </h3>
                     <RadioGroup value={jerseyColor} onValueChange={(value: "red" | "white") => {setJerseyColor(value); setIsSaved(false);}}>
                       <div className="grid grid-cols-2 gap-4">
                         <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${jerseyColor === "red" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
@@ -488,7 +515,10 @@ const Personnalisation = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold mb-4">📏 Taille du maillot</h3>
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <Ruler className="h-5 w-5" />
+                      Taille du maillot
+                    </h3>
                     <div className="grid grid-cols-5 gap-2">
                       {availableSizes.map((size) => (
                         <button
@@ -510,13 +540,16 @@ const Personnalisation = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold mb-4">📍 Position</h3>
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Position
+                    </h3>
                     <RadioGroup value={selectedPosition} onValueChange={(value: "back" | "chest" | "sleeve") => {setSelectedPosition(value); setIsSaved(false);}}>
                       <div className="grid grid-cols-3 gap-4">
                         {[
-                          { value: "back", label: "Dos", icon: <MapPin /> },
-                          { value: "chest", label: "Poitrine", icon: <MapPin /> },
-                          { value: "sleeve", label: "Manche", icon: <MapPin /> },
+                          { value: "back", label: "Dos", icon: <MapPin className="h-5 w-5" /> },
+                          { value: "chest", label: "Poitrine", icon: <MapPin className="h-5 w-5" /> },
+                          { value: "sleeve", label: "Manche", icon: <MapPin className="h-5 w-5" /> },
                         ].map((pos) => (
                           <label key={pos.value} className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedPosition === pos.value ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
                             <RadioGroupItem value={pos.value} />
@@ -530,7 +563,10 @@ const Personnalisation = () => {
 
                   <div className="space-y-4 border-t pt-6">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="text-toggle" className="text-lg font-bold">✏️ Nom</Label>
+                      <Label htmlFor="text-toggle" className="text-lg font-bold flex items-center gap-2">
+                        <Edit3 className="h-5 w-5" />
+                        Nom
+                      </Label>
                       <input type="checkbox" id="text-toggle" checked={textEnabled} onChange={(e) => {setTextEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
                     </div>
                     {textEnabled && (
@@ -540,7 +576,10 @@ const Personnalisation = () => {
 
                   <div className="space-y-4 border-t pt-6">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="number-toggle" className="text-lg font-bold">🔢 Numéro</Label>
+                      <Label htmlFor="number-toggle" className="text-lg font-bold flex items-center gap-2">
+                        <Hash className="h-5 w-5" />
+                        Numéro
+                      </Label>
                       <input type="checkbox" id="number-toggle" checked={numberEnabled} onChange={(e) => {setNumberEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
                     </div>
                     {numberEnabled && (
@@ -551,7 +590,10 @@ const Personnalisation = () => {
                   <div className="space-y-4 border-t pt-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label htmlFor="slogan-toggle" className="text-lg font-bold">💬 Slogan personnalisé</Label>
+                        <Label htmlFor="slogan-toggle" className="text-lg font-bold flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5" />
+                          Slogan personnalisé
+                        </Label>
                         <p className="text-sm text-green-600 font-semibold">+50 DH</p>
                       </div>
                       <input type="checkbox" id="slogan-toggle" checked={sloganEnabled} onChange={(e) => {setSloganEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
@@ -601,7 +643,10 @@ const Personnalisation = () => {
 
               <Card className="shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5">
                 <CardContent className="p-6">
-                  <h3 className="text-2xl font-bold mb-4">💰 Récapitulatif</h3>
+                  <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                    <Coins className="h-6 w-6" />
+                    Récapitulatif
+                  </h3>
                   <div className="space-y-3">
                     <div className="flex justify-between text-lg">
                       <span>Maillot personnalisé</span>
@@ -621,7 +666,7 @@ const Personnalisation = () => {
 
                   <Button onClick={handleSaveCustomization} disabled={isSaved} size="lg" className="w-full mt-6 shadow-lg gap-2">
                     <Save className="h-5 w-5" />
-                    {isSaved ? "✅ Enregistré" : "Enregistrer ma personnalisation"}
+                    {isSaved ? "Enregistré" : "Enregistrer ma personnalisation"}
                   </Button>
                 </CardContent>
               </Card>
@@ -629,7 +674,10 @@ const Personnalisation = () => {
               {isSaved && (
                 <Card className="shadow-lg border-2 border-primary animate-in fade-in slide-in-from-bottom">
                   <CardContent className="p-6 space-y-4">
-                    <h3 className="text-2xl font-bold">📋 Vos coordonnées</h3>
+                    <h3 className="text-2xl font-bold flex items-center gap-2">
+                      <ClipboardList className="h-6 w-6" />
+                      Vos coordonnées
+                    </h3>
                     
                     <div>
                       <Label>Nom complet *</Label>
@@ -653,8 +701,17 @@ const Personnalisation = () => {
                     </div>
 
                     <Button onClick={submitOrder} disabled={!customerName || !customerPhone || isSubmitting} size="lg" className="w-full shadow-lg gap-2">
-                      <ShoppingCart className="h-5 w-5" />
-                      {isSubmitting ? '⏳ Envoi en cours...' : '✅ Commander maintenant'}
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Envoi en cours...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-5 w-5" />
+                          Commander maintenant
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
