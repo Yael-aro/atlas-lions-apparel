@@ -17,6 +17,87 @@ const preloadImages = (imageUrls: string[]) => {
   });
 };
 
+const Countdown = () => {
+  const targetDate = new Date("2025-12-21T00:00:00").getTime();
+  
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance > 0) {
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000),
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return (
+    <div className="bg-gradient-to-r from-[#C8102E] via-[#C8102E] to-[#006233] py-8 px-4">
+      <div className="container mx-auto">
+        <div className="text-center text-white mb-6">
+          <h2 className="text-2xl md:text-4xl font-bold mb-2">🏆 CAN 2025 COMMENCE DANS</h2>
+          <p className="text-lg md:text-xl opacity-90">Préparez-vous à supporter les LIONS D'ATLAS !</p>
+        </div>
+        
+        <div className="grid grid-cols-4 gap-3 md:gap-8 max-w-4xl mx-auto">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center transform hover:scale-105 transition-transform">
+            <div className="text-4xl md:text-6xl font-bold text-white mb-2">
+              {timeLeft.days.toString().padStart(2, '0')}
+            </div>
+            <div className="text-sm md:text-lg font-semibold text-white/80">JOURS</div>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center transform hover:scale-105 transition-transform">
+            <div className="text-4xl md:text-6xl font-bold text-white mb-2">
+              {timeLeft.hours.toString().padStart(2, '0')}
+            </div>
+            <div className="text-sm md:text-lg font-semibold text-white/80">HEURES</div>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center transform hover:scale-105 transition-transform">
+            <div className="text-4xl md:text-6xl font-bold text-white mb-2">
+              {timeLeft.minutes.toString().padStart(2, '0')}
+            </div>
+            <div className="text-sm md:text-lg font-semibold text-white/80">MINUTES</div>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center transform hover:scale-105 transition-transform">
+            <div className="text-4xl md:text-6xl font-bold text-white mb-2 animate-pulse">
+              {timeLeft.seconds.toString().padStart(2, '0')}
+            </div>
+            <div className="text-sm md:text-lg font-semibold text-white/80">SECONDES</div>
+          </div>
+        </div>
+
+        <div className="text-center mt-6">
+          <Link to="/boutique">
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-xl text-lg px-8 font-bold">
+              🛒 Commandez Maintenant
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Index = () => {
   const featuredProducts = getFeaturedProducts();
   
@@ -97,7 +178,7 @@ const Index = () => {
                 CAN2025 JERSEYS
               </h1>
               <p className="text-lg md:text-2xl mb-8 text-white/95 drop-shadow-md">
-                Soutenez les Atlas Lions avec style. Produits premium personnalisables.
+                Soutenez les LIONS D'ATLAS avec style. Produits premium personnalisables.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/boutique">
@@ -116,6 +197,9 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* COMPTE À REBOURS */}
+        <Countdown />
 
         <section className="py-12 md:py-16 bg-muted/30">
           <div className="container px-4">

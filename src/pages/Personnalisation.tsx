@@ -1,383 +1,231 @@
+
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useRef, useEffect } from "react";
-import { ShoppingCart, Sparkles, ZoomIn, ZoomOut, RotateCcw, Info, Save, Check, AlertCircle } from "lucide-react";
-import { useCart } from "@/contexts/CartContext";
-import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Save, ShoppingCart, Palette, Type, MapPin } from "lucide-react";
+import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import { supabase } from '@/lib/supabase';
 import jerseyRedImage from "@/assets/jersey-red.jpg";
 import jerseywhiteImage from "@/assets/jerseywhiteimage.jpg";
 import backRedImage from "@/assets/back.jpg";
 import backWhiteImage from "@/assets/backwhiteimage.jpg";
-import { supabase } from '@/lib/supabase';
-
-// Type pour les données de personnalisation complètes
-interface PersonalizationData {
-  id: string;
-  timestamp: number;
-  jerseyColor: string;
-  name: {
-    enabled: boolean;
-    text: string;
-    font: string;
-    color: string;
-    position: { x: number; y: number };
-  };
-  number: {
-    enabled: boolean;
-    text: string;
-    font: string;
-    color: string;
-    position: { x: number; y: number };
-  };
-  slogan: {
-    enabled: boolean;
-    text: string;
-    font: string;
-    color: string;
-    size: "small" | "medium" | "large";
-    position: { x: number; y: number };
-  };
-  selectedPosition: string;
-  previewImage?: string;
-}
 
 const Personnalisation = () => {
-  const { addToCart } = useCart();
   const navigate = useNavigate();
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const [jerseyColor, setJerseyColor] = useState<"red" | "white">("red");
+  const [selectedSize, setSelectedSize] = useState<string>("M");
   
-  // ✅ Détection mobile
-  const [isMobile, setIsMobile] = useState(false);
+  const [customText, setCustomText] = useState("");
+  const [customNumber, setCustomNumber] = useState("");
+  const [customSlogan, setCustomSlogan] = useState("");
   
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  // États de base
-  const [customText, setCustomText] = useState("MAROC");
-  const [customNumber, setCustomNumber] = useState("10");
-  const [selectedFont, setSelectedFont] = useState("montserrat");
-  const [selectedColor, setSelectedColor] = useState("gold");
-  const [selectedPosition, setSelectedPosition] = useState("back");
-  const [jerseyColor, setJerseyColor] = useState("red");
-  
-  // États pour le slogan
+  const [textEnabled, setTextEnabled] = useState(false);
+  const [numberEnabled, setNumberEnabled] = useState(false);
   const [sloganEnabled, setSloganEnabled] = useState(false);
-  const [sloganText, setSloganText] = useState("");
-  const [sloganFont, setSloganFont] = useState("montserrat");
-  const [sloganColor, setSloganColor] = useState("gold");
-  const [sloganSize, setSloganSize] = useState<"small" | "medium" | "large">("medium");
   
-  // États pour positions drag & drop
+  const [selectedFont, setSelectedFont] = useState("montserrat");
+  const [selectedColor, setSelectedColor] = useState("white");
+  const [selectedPosition, setSelectedPosition] = useState<"back" | "chest" | "sleeve">("back");
+  
   const [textPosition, setTextPosition] = useState({ x: 50, y: 35 });
   const [numberPosition, setNumberPosition] = useState({ x: 50, y: 50 });
   const [sloganPosition, setSloganPosition] = useState({ x: 50, y: 65 });
   
   const [draggedElement, setDraggedElement] = useState<"text" | "number" | "slogan" | null>(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
+  
   const [isSaved, setIsSaved] = useState(false);
-  const [personalizationId, setPersonalizationId] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState("");
   
-  // ✅ États pour le formulaire client
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [clientName, setClientName] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
-  const [clientCity, setClientCity] = useState('');
-  const [clientAddress, setClientAddress] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerCity, setCustomerCity] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const previewRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const numberRef = useRef<HTMLDivElement>(null);
-  const sloganRef = useRef<HTMLDivElement>(null);
+
+  const availableSizes = ["S", "M", "L", "XL", "XXL"];
 
   const fonts = [
-    { value: "montserrat", label: "Montserrat Bold", fontFamily: "'Montserrat', sans-serif" },
-    { value: "bebas", label: "Bebas Neue", fontFamily: "'Bebas Neue', sans-serif" },
-    { value: "oswald", label: "Oswald", fontFamily: "'Oswald', sans-serif" },
-    { value: "roboto", label: "Roboto Black", fontFamily: "'Roboto', sans-serif" },
-    { value: "impact", label: "Impact", fontFamily: "'Impact', sans-serif" },
-    { value: "permanent", label: "Permanent Marker", fontFamily: "'Permanent Marker', cursive" },
-    { value: "cairo", label: "Cairo Bold (عربي)", fontFamily: "'Cairo', sans-serif" },
-    { value: "amiri", label: "Amiri (عربي)", fontFamily: "'Amiri', serif" },
+    { value: "montserrat", label: "Montserrat", style: "font-sans" },
+    { value: "roboto", label: "Roboto", style: "font-sans" },
+    { value: "playfair", label: "Playfair Display", style: "font-serif" },
+    { value: "inter", label: "Inter", style: "font-sans" },
+    { value: "lora", label: "Lora", style: "font-serif" },
+    { value: "opensans", label: "Open Sans", style: "font-sans" },
+    { value: "raleway", label: "Raleway", style: "font-sans" },
+    { value: "poppins", label: "Poppins", style: "font-sans" },
   ];
 
   const colors = [
-    { value: "gold", label: "Or", hex: "#FFD700" },
-    { value: "white", label: "Blanc", hex: "#FFFFFF" },
-    { value: "black", label: "Noir", hex: "#000000" },
-    { value: "red", label: "Rouge", hex: "#C1272D" },
-    { value: "green", label: "Vert", hex: "#006233" },
+    { value: "white", label: "Blanc", color: "#FFFFFF" },
+    { value: "red", label: "Rouge", color: "#C8102E" },
+    { value: "green", label: "Vert", color: "#006233" },
   ];
 
-  const jerseyColors = [
-    { 
-      value: "red", 
-      label: "Rouge (Domicile)", 
-      image: jerseyRedImage,
-      backImage: backRedImage,
-      recommendedTextColors: ["gold", "white"]
-    },
-    { 
-      value: "white", 
-      label: "Blanc (Extérieur)", 
-      image: jerseywhiteImage,
-      backImage: backWhiteImage,
-      recommendedTextColors: ["red", "green", "black"]
-    },
-  ];
-
-  const sloganSizes = [
-    { value: "small", label: "Petit", fontSize: "1rem" },
-    { value: "medium", label: "Moyen", fontSize: "1.5rem" },
-    { value: "large", label: "Grand", fontSize: "2rem" },
-  ];
-
-  const getCurrentJerseyImage = () => {
-    const currentJersey = jerseyColors.find(j => j.value === jerseyColor);
-    return selectedPosition === "back" 
-      ? currentJersey?.backImage || backRedImage
-      : currentJersey?.image || jerseyRedImage;
+  const jerseyImages = {
+    red: { front: jerseyRedImage, back: backRedImage },
+    white: { front: jerseywhiteImage, back: backWhiteImage }
   };
 
-  const getColorSuggestion = () => {
-    const currentJersey = jerseyColors.find(j => j.value === jerseyColor);
-    const recommended = currentJersey?.recommendedTextColors || [];
-    if (recommended.includes(selectedColor)) return null;
-    
-    const recommendedLabels = recommended
-      .map(c => colors.find(col => col.value === c)?.label)
-      .filter(Boolean);
-    
-    return recommendedLabels.length > 0 
-      ? `💡 Pour une meilleure lisibilité, essayez le texte ${recommendedLabels.join(" ou ")}`
-      : null;
-  };
+  const currentJerseyImage = selectedPosition === "back" 
+    ? jerseyImages[jerseyColor].back 
+    : jerseyImages[jerseyColor].front;
 
-  // ✅ Gestion du drag & drop (DÉSACTIVÉ SUR MOBILE)
-  // ✅ Gestion du drag & drop AVEC SUPPORT TACTILE
-const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
-  setDraggedElement(element);
-  setIsSaved(false);
-  e.preventDefault();
-};
-
-const handleTouchStart = (element: "text" | "number" | "slogan") => (e: React.TouchEvent) => {
-  setDraggedElement(element);
-  setIsSaved(false);
-  e.preventDefault();
-};
-
-const handleMouseMove = (e: MouseEvent) => {
-  if (draggedElement && previewRef.current) {
-    const rect = previewRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    const constrainedX = Math.max(10, Math.min(90, x));
-    const constrainedY = Math.max(10, Math.min(90, y));
-    
-    if (draggedElement === "text") {
-      setTextPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "number") {
-      setNumberPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "slogan") {
-      setSloganPosition({ x: constrainedX, y: constrainedY });
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^(06|07|05)\d{8}$/;
+    if (!phone) {
+      setPhoneError('Téléphone requis');
+      return false;
     }
-  }
-};
-
-const handleTouchMove = (e: TouchEvent) => {
-  if (draggedElement && previewRef.current && e.touches.length > 0) {
-    const touch = e.touches[0];
-    const rect = previewRef.current.getBoundingClientRect();
-    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-    const y = ((touch.clientY - rect.top) / rect.height) * 100;
-    
-    const constrainedX = Math.max(10, Math.min(90, x));
-    const constrainedY = Math.max(10, Math.min(90, y));
-    
-    if (draggedElement === "text") {
-      setTextPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "number") {
-      setNumberPosition({ x: constrainedX, y: constrainedY });
-    } else if (draggedElement === "slogan") {
-      setSloganPosition({ x: constrainedX, y: constrainedY });
+    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+      setPhoneError('Format: 06XXXXXXXX');
+      return false;
     }
-  }
-};
-
-const handleMouseUp = () => {
-  setDraggedElement(null);
-};
-
-const handleTouchEnd = () => {
-  setDraggedElement(null);
-};
-
-useEffect(() => {
-  if (draggedElement) {
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("touchmove", handleTouchMove);
-    window.addEventListener("touchend", handleTouchEnd);
-  }
-  return () => {
-    window.removeEventListener("mousemove", handleMouseMove);
-    window.removeEventListener("mouseup", handleMouseUp);
-    window.removeEventListener("touchmove", handleTouchMove);
-    window.removeEventListener("touchend", handleTouchEnd);
-  };
-}, [draggedElement]);
-  // Gestion du zoom
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoomLevel(prev => Math.max(0.5, Math.min(2, prev + delta)));
+    setPhoneError('');
+    return true;
   };
 
-  const handleZoomIn = () => setZoomLevel(prev => Math.min(2, prev + 0.2));
-  const handleZoomOut = () => setZoomLevel(prev => Math.max(0.5, prev - 0.2));
-  const handleResetZoom = () => setZoomLevel(1);
-
-  // Reset positions
-  useEffect(() => {
-    setTextPosition({ x: 50, y: 35 });
-    setNumberPosition({ x: 50, y: 50 });
-    setSloganPosition({ x: 50, y: 65 });
-  }, [selectedPosition]);
-
-  // Marquer comme non sauvegardé
-  useEffect(() => {
+  const handleMouseDown = (element: "text" | "number" | "slogan") => (e: React.MouseEvent) => {
+    setDraggedElement(element);
     setIsSaved(false);
-  }, [customText, customNumber, selectedFont, selectedColor, jerseyColor, sloganEnabled, sloganText, sloganFont, sloganColor, sloganSize]);
-
-  // Calcul du prix
-  const calculatePrice = () => {
-    const basePrice = 280;
-    const sloganPrice = sloganEnabled && sloganText ? 50 : 0;
-    return basePrice + sloganPrice;
+    e.preventDefault();
   };
 
-  // Validation
-  const validatePersonalization = (): string | null => {
-    if (!customText && !customNumber && (!sloganEnabled || !sloganText)) {
-      return "Veuillez saisir au moins un nom, un numéro ou un slogan";
-    }
-    if (customText && customText.length > 15) {
-      return "Le nom ne doit pas dépasser 15 caractères";
-    }
-    if (sloganText && sloganText.length > 30) {
-      return "Le slogan ne doit pas dépasser 30 caractères";
-    }
-    return null;
+  const handleTouchStart = (element: "text" | "number" | "slogan") => (e: React.TouchEvent) => {
+    setDraggedElement(element);
+    setIsSaved(false);
+    e.preventDefault();
   };
 
-  // Capture d'écran
-  const capturePreview = async (): Promise<string> => {
+  const handleMouseMove = (e: MouseEvent) => {
+    if (draggedElement && previewRef.current) {
+      const rect = previewRef.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      const clampedX = Math.max(10, Math.min(90, x));
+      const clampedY = Math.max(10, Math.min(90, y));
+
+      if (draggedElement === "text") setTextPosition({ x: clampedX, y: clampedY });
+      if (draggedElement === "number") setNumberPosition({ x: clampedX, y: clampedY });
+      if (draggedElement === "slogan") setSloganPosition({ x: clampedX, y: clampedY });
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (draggedElement && previewRef.current && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const rect = previewRef.current.getBoundingClientRect();
+      const x = ((touch.clientX - rect.left) / rect.width) * 100;
+      const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
+      const clampedX = Math.max(10, Math.min(90, x));
+      const clampedY = Math.max(10, Math.min(90, y));
+
+      if (draggedElement === "text") setTextPosition({ x: clampedX, y: clampedY });
+      if (draggedElement === "number") setNumberPosition({ x: clampedX, y: clampedY });
+      if (draggedElement === "slogan") setSloganPosition({ x: clampedX, y: clampedY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDraggedElement(null);
+  };
+
+  const handleTouchEnd = () => {
+    setDraggedElement(null);
+  };
+
+  useEffect(() => {
+    if (draggedElement) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove);
+      window.addEventListener("touchend", handleTouchEnd);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [draggedElement]);
+
+  const capturePreview = async () => {
+    if (!previewRef.current) return "";
+
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      if (previewRef.current) {
-        const canvas = await html2canvas(previewRef.current, {
-          scale: 2,
-          backgroundColor: null,
-          logging: false,
-        });
-        return canvas.toDataURL('image/png');
-      }
+      const canvas = await html2canvas(previewRef.current, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        scale: 2,
+      });
+      return canvas.toDataURL("image/png");
     } catch (error) {
-      console.error('Erreur capture:', error);
+      console.error("Erreur capture:", error);
+      return "";
     }
-    return "";
   };
 
-  // ✅ SAUVEGARDE
-  const handleSavePersonalization = async () => {
-    const error = validatePersonalization();
-    if (error) {
-      toast.error(error, {
-        icon: <AlertCircle className="h-4 w-4" />
-      });
+  const handleSaveCustomization = async () => {
+    if (!textEnabled && !numberEnabled && !sloganEnabled) {
+      toast.error("Activez au moins une personnalisation");
       return;
     }
 
-    try {
-      const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const previewImage = await capturePreview();
-      
-      const data: PersonalizationData = {
-        id,
-        timestamp: Date.now(),
-        jerseyColor,
-        name: {
-          enabled: !!customText,
-          text: customText,
-          font: selectedFont,
-          color: selectedColor,
-          position: textPosition,
-        },
-        number: {
-          enabled: !!customNumber,
-          text: customNumber,
-          font: selectedFont,
-          color: selectedColor,
-          position: numberPosition,
-        },
-        slogan: {
-          enabled: sloganEnabled,
-          text: sloganText,
-          font: sloganFont,
-          color: sloganColor,
-          size: sloganSize,
-          position: sloganPosition,
-        },
-        selectedPosition,
-        previewImage,
-      };
-
-      localStorage.setItem(`personalization-${id}`, JSON.stringify(data));
-      
-      setPersonalizationId(id);
-      setIsSaved(true);
-      
-      toast.success("✓ Personnalisation enregistrée avec succès !", {
-        icon: <Check className="h-4 w-4" />
-      });
-    } catch (error) {
-      toast.error("Erreur lors de la sauvegarde", {
-        icon: <AlertCircle className="h-4 w-4" />
-      });
-    }
-  };
-
-  // ✅ OUVRIR LE FORMULAIRE CLIENT
-  const handleOrderNow = async () => {
-    if (!isSaved || !personalizationId) {
-      toast.error("Veuillez d'abord enregistrer votre personnalisation", {
-        icon: <AlertCircle className="h-4 w-4" />
-      });
+    if (textEnabled && !customText.trim()) {
+      toast.error("Veuillez entrer un nom");
       return;
     }
-    
-    setShowClientForm(true);
+
+    if (numberEnabled && !customNumber.trim()) {
+      toast.error("Veuillez entrer un numéro");
+      return;
+    }
+
+    const preview = await capturePreview();
+    setPreviewImage(preview);
+
+    const customizationData = {
+      jerseyColor,
+      selectedSize,
+      name: { enabled: textEnabled, text: customText, font: selectedFont, color: selectedColor, position: textPosition },
+      number: { enabled: numberEnabled, text: customNumber, font: selectedFont, color: selectedColor, position: numberPosition },
+      slogan: { enabled: sloganEnabled, text: customSlogan, font: selectedFont, color: selectedColor, size: "medium", position: sloganPosition },
+      selectedPosition,
+      previewImage: preview,
+    };
+
+    localStorage.setItem("personalization-1", JSON.stringify(customizationData));
+    setIsSaved(true);
+    toast.success("✅ Personnalisation enregistrée !", {
+      description: "Remplissez vos coordonnées pour commander",
+    });
   };
 
-  // ✅ SOUMETTRE LA COMMANDE À SUPABASE
   const submitOrder = async () => {
-    if (!clientName || !clientPhone) {
-      toast.error("Nom et téléphone obligatoires");
+    if (!isSaved) {
+      toast.error("Enregistrez d'abord votre personnalisation");
+      return;
+    }
+
+    if (!customerName.trim()) {
+      toast.error("Nom requis");
+      return;
+    }
+
+    if (!validatePhone(customerPhone)) {
       return;
     }
 
@@ -385,652 +233,436 @@ useEffect(() => {
     const loadingToast = toast.loading('⏳ Enregistrement de votre commande...');
 
     try {
-      const savedData = localStorage.getItem(`personalization-${personalizationId}`);
-      if (!savedData) {
-        toast.error("Données de personnalisation introuvables");
-        return;
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const orderNumber = `CMD-${timestamp}-${random}`;
+
+      let sloganPrice = 0;
+      if (sloganEnabled && customSlogan.trim()) {
+        sloganPrice = 50;
       }
 
-      const data: PersonalizationData = JSON.parse(savedData);
-      
-      const { count, error: countError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
-      
-      if (countError) throw countError;
-      
-      const orderNumber = `CMD-${String((count || 0) + 1).padStart(4, '0')}`;
+      const basePrice = 299;
+      const totalPrice = basePrice + sloganPrice;
 
       const orderData = {
         order_number: orderNumber,
-        personalization_id: personalizationId,
-        customer_name: clientName,
-        customer_phone: clientPhone,
-        customer_address: clientAddress || '',
-        customer_city: clientCity || '',
+        personalization_id: '1',
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.replace(/\s/g, ''),
+        customer_address: customerAddress.trim() || '',
+        customer_city: customerCity.trim() || '',
         
-        product_name: `Maillot Maroc Premium ${jerseyColor === 'red' ? 'Rouge' : 'Blanc'}`,
-        product_price: 280,
-        product_image_url: getCurrentJerseyImage(),
-        product_category: 'Maillots',
+        product_name: 'Maillot CAN 2025 Personnalisé',
+        product_price: basePrice,
+        product_image_url: currentJerseyImage,
+        product_category: 'Maillot',
+        product_size: selectedSize,
         
         jersey_color: jerseyColor,
-        total_price: calculatePrice(),
+        total_price: totalPrice,
         status: 'pending',
-        notes: `Personnalisation ${selectedPosition} - Maillot ${jerseyColor === 'red' ? 'Rouge' : 'Blanc'}`,
+        notes: `Maillot ${jerseyColor === 'red' ? 'Rouge' : 'Blanc'} - Taille: ${selectedSize} - Position: ${selectedPosition}${sloganEnabled ? ' - Avec slogan (+50 DH)' : ''}`,
         
-        name_enabled: data.name.enabled,
-        name_text: data.name.text,
-        name_font: data.name.font,
-        name_color: data.name.color,
-        name_position_x: data.name.position.x,
-        name_position_y: data.name.position.y,
+        name_enabled: textEnabled,
+        name_text: customText,
+        name_font: selectedFont,
+        name_color: selectedColor,
+        name_position_x: textPosition.x,
+        name_position_y: textPosition.y,
         
-        number_enabled: data.number.enabled,
-        number_text: data.number.text,
-        number_font: data.number.font,
-        number_color: data.number.color,
-        number_position_x: data.number.position.x,
-        number_position_y: data.number.position.y,
+        number_enabled: numberEnabled,
+        number_text: customNumber,
+        number_font: selectedFont,
+        number_color: selectedColor,
+        number_position_x: numberPosition.x,
+        number_position_y: numberPosition.y,
         
-        slogan_enabled: data.slogan.enabled,
-        slogan_text: data.slogan.text,
-        slogan_font: data.slogan.font,
-        slogan_color: data.slogan.color,
-        slogan_size: data.slogan.size,
-        slogan_position_x: data.slogan.position.x,
-        slogan_position_y: data.slogan.position.y,
+        slogan_enabled: sloganEnabled,
+        slogan_text: customSlogan,
+        slogan_font: selectedFont,
+        slogan_color: selectedColor,
+        slogan_size: 'medium',
+        slogan_position_x: sloganPosition.x,
+        slogan_position_y: sloganPosition.y,
         
         selected_position: selectedPosition,
-        preview_image_url: data.previewImage || ''
+        preview_image_url: previewImage,
       };
 
-      const { error: insertError } = await supabase
-        .from('orders')
-        .insert([orderData]);
+      const { error } = await supabase.from('orders').insert([orderData]);
 
-      if (insertError) throw insertError;
+      if (error) throw error;
 
       toast.dismiss(loadingToast);
       toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
         duration: 5000,
-        description: 'Confirmation par téléphone sous 24h'
+        description: `Total: ${totalPrice} DH`
       });
 
-      setShowClientForm(false);
-      setClientName('');
-      setClientPhone('');
-      setClientCity('');
-      setClientAddress('');
+      localStorage.removeItem("personalization-1");
 
       setTimeout(() => {
+        toast.info("📦 Confirmation par téléphone sous 24h", { duration: 5000 });
         navigate('/');
-      }, 2000);
-      
+      }, 1500);
+
     } catch (error: any) {
       toast.dismiss(loadingToast);
-      console.error('Erreur:', error);
+      console.error('Erreur commande:', error);
       toast.error("❌ Erreur: " + (error.message || "Veuillez réessayer"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Ajout au panier (optionnel)
-  const handleAddToCart = () => {
-    if (!isSaved) {
-      toast.error("Veuillez d'abord enregistrer votre personnalisation");
-      return;
+  useEffect(() => {
+    const savedData = localStorage.getItem("personalization-1");
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        setJerseyColor(data.jerseyColor || "red");
+        setSelectedSize(data.selectedSize || "M");
+        setCustomText(data.name?.text || "");
+        setCustomNumber(data.number?.text || "");
+        setCustomSlogan(data.slogan?.text || "");
+        setTextEnabled(data.name?.enabled || false);
+        setNumberEnabled(data.number?.enabled || false);
+        setSloganEnabled(data.slogan?.enabled || false);
+        setSelectedFont(data.name?.font || "montserrat");
+        setSelectedColor(data.name?.color || "white");
+        setSelectedPosition(data.selectedPosition || "back");
+        setTextPosition(data.name?.position || { x: 50, y: 35 });
+        setNumberPosition(data.number?.position || { x: 50, y: 50 });
+        setSloganPosition(data.slogan?.position || { x: 50, y: 65 });
+        setPreviewImage(data.previewImage || "");
+        setIsSaved(true);
+      } catch (e) {
+        console.error("Erreur chargement:", e);
+      }
     }
+  }, []);
 
-    addToCart({
-      id: personalizationId || `custom-${Date.now()}`,
-      name: `Maillot Personnalisé ${jerseyColor === "red" ? "Rouge" : "Blanc"}`,
-      price: calculatePrice(),
-      image: getCurrentJerseyImage(),
-      category: "Maillot",
-      customizable: true,
-    });
-    
-    toast.success("Ajouté au panier !");
-    navigate("/panier");
+  const getFontClass = (font: string) => {
+    const fontMap: { [key: string]: string } = {
+      montserrat: "font-sans",
+      roboto: "font-sans",
+      playfair: "font-serif",
+      inter: "font-sans",
+      lora: "font-serif",
+      opensans: "font-sans",
+      raleway: "font-sans",
+      poppins: "font-sans",
+    };
+    return fontMap[font] || "font-sans";
+  };
+
+  const getColorValue = (color: string) => {
+    const colorMap: { [key: string]: string } = {
+      white: "#FFFFFF",
+      red: "#C8102E",
+      green: "#006233",
+    };
+    return colorMap[color] || "#FFFFFF";
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Bebas+Neue&family=Oswald:wght@700&family=Roboto:wght@900&family=Permanent+Marker&family=Cairo:wght@700&family=Amiri:wght@700&display=swap" rel="stylesheet" />
-      
-      <main className="flex-1">
-        <section className="gradient-primary py-12 md:py-16 text-white">
-          <div className="container px-4">
-            <div className="flex items-center justify-center mb-4">
-              <Sparkles className="h-6 w-6 md:h-8 md:w-8 mr-3" />
-              <h1 className="text-3xl md:text-5xl font-bold text-center">Personnalisation Premium</h1>
-            </div>
-            <p className="text-lg md:text-xl text-white/90 text-center">
-              Créez votre maillot unique - Commande directe en ligne
-            </p>
+      <main className="flex-1 py-8 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container px-4 max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-8">
+            <Button variant="outline" onClick={() => navigate("/boutique")} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Retour à la boutique
+            </Button>
+            <h1 className="text-3xl md:text-4xl font-bold">Personnalisez votre maillot</h1>
           </div>
-        </section>
 
-        <section className="py-8 md:py-12">
-          <div className="container px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-7xl mx-auto">
-              
-              {/* Preview */}
-              <Card className="shadow-elegant">
-                <CardContent className="p-4 md:p-8">
-                  <h2 className="text-xl md:text-2xl font-bold mb-4 text-center">Prévisualisation</h2>
-                  
-                  <div className="flex justify-center gap-2 mb-4">
-                    <Button variant="outline" size="sm" onClick={handleZoomOut}>
-                      <ZoomOut className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleResetZoom}>
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleZoomIn}>
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm text-muted-foreground flex items-center">
-                      {Math.round(zoomLevel * 100)}%
-                    </span>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="shadow-2xl">
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Palette className="h-6 w-6 text-primary" />
+                  Aperçu en temps réel
+                </h2>
 
-                  <div 
-                    ref={previewRef}
-                    className="relative aspect-square max-w-md mx-auto overflow-hidden rounded-lg bg-muted/20"
-                    onWheel={handleWheel}
-                    style={{ cursor: draggedElement ? "grabbing" : "default" }}
-                  >
-                    <div 
-                      style={{ 
-                        transform: `scale(${zoomLevel})`,
-                        transformOrigin: "center",
-                        transition: draggedElement ? "none" : "transform 0.2s"
+                <div 
+                  ref={previewRef}
+                  className="relative w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden shadow-inner"
+                  style={{ touchAction: 'none' }}
+                >
+                  <img 
+                    src={currentJerseyImage}
+                    alt={`Maillot ${jerseyColor}`}
+                    className="w-full h-full object-contain"
+                  />
+
+                  {textEnabled && customText && (
+                    <div
+                      onMouseDown={handleMouseDown("text")}
+                      onTouchStart={handleTouchStart("text")}
+                      className={`absolute ${getFontClass(selectedFont)} font-bold text-4xl md:text-5xl cursor-move select-none`}
+                      style={{
+                        left: `${textPosition.x}%`,
+                        top: `${textPosition.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                        color: getColorValue(selectedColor),
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                        WebkitTextStroke: '1px rgba(0,0,0,0.5)',
                       }}
-                      className="w-full h-full"
                     >
-                      <img 
-                        src={getCurrentJerseyImage()} 
-                        alt="Maillot" 
-                        className="w-full h-full object-contain"
-                        draggable={false}
-                      />
-                      
-                      {/* Nom */}
-{customText && (
-  <div 
-    ref={textRef}
-    onMouseDown={handleMouseDown("text")}
-    onTouchStart={handleTouchStart("text")}
-    className="absolute text-center select-none"
-    style={{ 
-      left: `${textPosition.x}%`,
-      top: `${textPosition.y}%`,
-      transform: "translate(-50%, -50%)",
-      cursor: "move",
-      fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
-      color: colors.find(c => c.value === selectedColor)?.hex,
-      fontSize: isMobile ? "1.5rem" : "2rem",
-      fontWeight: "bold",
-      textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-      WebkitTextStroke: "1px rgba(0,0,0,0.3)",
-    }}
-  >
-    {customText}
-  </div>
-)}
-
-{/* Numéro */}
-{customNumber && (
-  <div 
-    ref={numberRef}
-    onMouseDown={handleMouseDown("number")}
-    onTouchStart={handleTouchStart("number")}
-    className="absolute text-center select-none"
-    style={{ 
-      left: `${numberPosition.x}%`,
-      top: `${numberPosition.y}%`,
-      transform: "translate(-50%, -50%)",
-      cursor: "move",
-      fontFamily: fonts.find(f => f.value === selectedFont)?.fontFamily,
-      color: colors.find(c => c.value === selectedColor)?.hex,
-      fontSize: isMobile ? "3rem" : "5rem",
-      fontWeight: "bold",
-      textShadow: "3px 3px 6px rgba(0,0,0,0.7)",
-      WebkitTextStroke: "2px rgba(0,0,0,0.3)",
-    }}
-  >
-    {customNumber}
-  </div>
-)}
-
-{/* Slogan */}
-{sloganEnabled && sloganText && (
-  <div 
-    ref={sloganRef}
-    onMouseDown={handleMouseDown("slogan")}
-    onTouchStart={handleTouchStart("slogan")}
-    className="absolute text-center select-none"
-    style={{ 
-      left: `${sloganPosition.x}%`,
-      top: `${sloganPosition.y}%`,
-      transform: "translate(-50%, -50%)",
-      cursor: "move",
-      fontFamily: fonts.find(f => f.value === sloganFont)?.fontFamily,
-      color: colors.find(c => c.value === sloganColor)?.hex,
-      fontSize: sloganSizes.find(s => s.value === sloganSize)?.fontSize,
-      fontWeight: "bold",
-      textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-      WebkitTextStroke: "0.5px rgba(0,0,0,0.3)",
-    }}
-  >
-    {sloganText}
-  </div>
-)}
+                      {customText}
                     </div>
+                  )}
+
+                  {numberEnabled && customNumber && (
+                    <div
+                      onMouseDown={handleMouseDown("number")}
+                      onTouchStart={handleTouchStart("number")}
+                      className={`absolute ${getFontClass(selectedFont)} font-bold text-6xl md:text-7xl cursor-move select-none`}
+                      style={{
+                        left: `${numberPosition.x}%`,
+                        top: `${numberPosition.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                        color: getColorValue(selectedColor),
+                        textShadow: '3px 3px 6px rgba(0,0,0,0.8)',
+                        WebkitTextStroke: '1.5px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      {customNumber}
+                    </div>
+                  )}
+
+                  {sloganEnabled && customSlogan && (
+                    <div
+                      onMouseDown={handleMouseDown("slogan")}
+                      onTouchStart={handleTouchStart("slogan")}
+                      className={`absolute ${getFontClass(selectedFont)} font-semibold text-2xl md:text-3xl cursor-move select-none`}
+                      style={{
+                        left: `${sloganPosition.x}%`,
+                        top: `${sloganPosition.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                        color: getColorValue(selectedColor),
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                        WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      {customSlogan}
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-sm text-muted-foreground mt-4 text-center">
+                  💡 {window.innerWidth > 768 
+                    ? "Glissez les éléments pour les déplacer • Molette pour zoomer" 
+                    : "Glissez les éléments pour les déplacer"}
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              <Card className="shadow-lg">
+                <CardContent className="p-6 space-y-6">
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">🎨 Couleur du maillot</h3>
+                    <RadioGroup value={jerseyColor} onValueChange={(value: "red" | "white") => {setJerseyColor(value); setIsSaved(false);}}>
+                      <div className="grid grid-cols-2 gap-4">
+                        <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${jerseyColor === "red" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
+                          <RadioGroupItem value="red" />
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-[#C8102E] border-2 border-gray-300"></div>
+                            <span className="font-semibold">Rouge</span>
+                          </div>
+                        </label>
+                        <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${jerseyColor === "white" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
+                          <RadioGroupItem value="white" />
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-white border-2 border-gray-300"></div>
+                            <span className="font-semibold">Blanc</span>
+                          </div>
+                        </label>
+                      </div>
+                    </RadioGroup>
                   </div>
 
-                  <div className="mt-4 space-y-2">
-                    <p className="text-center text-sm text-muted-foreground">
-                      Position: {selectedPosition === "back" ? "Dos" : selectedPosition === "chest" ? "Poitrine" : "Manche"}
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">📏 Taille du maillot</h3>
+                    <div className="grid grid-cols-5 gap-2">
+                      {availableSizes.map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => {setSelectedSize(size); setIsSaved(false);}}
+                          className={`px-4 py-3 rounded-lg border-2 font-bold transition-all ${
+                            selectedSize === size
+                              ? 'border-primary bg-primary text-white scale-105 shadow-lg'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Taille sélectionnée : <span className="font-bold text-primary">{selectedSize}</span>
                     </p>
-                    {/* ✅ Message différent sur mobile */}
-                    {!isMobile && (
-                      <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-                        <Info className="h-3 w-3" />
-                        Glissez les éléments pour les déplacer • Molette pour zoomer
-                      </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">📍 Position</h3>
+                    <RadioGroup value={selectedPosition} onValueChange={(value: "back" | "chest" | "sleeve") => {setSelectedPosition(value); setIsSaved(false);}}>
+                      <div className="grid grid-cols-3 gap-4">
+                        {[
+                          { value: "back", label: "Dos", icon: <MapPin /> },
+                          { value: "chest", label: "Poitrine", icon: <MapPin /> },
+                          { value: "sleeve", label: "Manche", icon: <MapPin /> },
+                        ].map((pos) => (
+                          <label key={pos.value} className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedPosition === pos.value ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
+                            <RadioGroupItem value={pos.value} />
+                            {pos.icon}
+                            <span className="font-semibold text-sm">{pos.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-4 border-t pt-6">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="text-toggle" className="text-lg font-bold">✏️ Nom</Label>
+                      <input type="checkbox" id="text-toggle" checked={textEnabled} onChange={(e) => {setTextEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
+                    </div>
+                    {textEnabled && (
+                      <Input value={customText} onChange={(e) => {setCustomText(e.target.value.slice(0, 15)); setIsSaved(false);}} placeholder="Ex: ZIYECH" maxLength={15} className="text-lg" />
                     )}
-                    {isMobile && (
-                      <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-                        <Info className="h-3 w-3" />
-                        Molette/Pincement pour zoomer
-                      </p>
+                  </div>
+
+                  <div className="space-y-4 border-t pt-6">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="number-toggle" className="text-lg font-bold">🔢 Numéro</Label>
+                      <input type="checkbox" id="number-toggle" checked={numberEnabled} onChange={(e) => {setNumberEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
+                    </div>
+                    {numberEnabled && (
+                      <Input type="number" min="1" max="99" value={customNumber} onChange={(e) => {const val = e.target.value; if (!val || (parseInt(val) >= 1 && parseInt(val) <= 99)) {setCustomNumber(val); setIsSaved(false);}}} placeholder="Ex: 7" className="text-lg" />
                     )}
+                  </div>
+
+                  <div className="space-y-4 border-t pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="slogan-toggle" className="text-lg font-bold">💬 Slogan personnalisé</Label>
+                        <p className="text-sm text-green-600 font-semibold">+50 DH</p>
+                      </div>
+                      <input type="checkbox" id="slogan-toggle" checked={sloganEnabled} onChange={(e) => {setSloganEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
+                    </div>
+                    {sloganEnabled && (
+                      <Textarea value={customSlogan} onChange={(e) => {setCustomSlogan(e.target.value.slice(0, 30)); setIsSaved(false);}} placeholder="Ex: Dima Maghrib" maxLength={30} rows={2} className="text-lg resize-none" />
+                    )}
+                  </div>
+
+                  <div className="space-y-4 border-t pt-6">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <Type className="h-5 w-5" />
+                      Police d'écriture
+                    </h3>
+                    <RadioGroup value={selectedFont} onValueChange={(value) => {setSelectedFont(value); setIsSaved(false);}}>
+                      <div className="grid grid-cols-2 gap-3">
+                        {fonts.map((font) => (
+                          <label key={font.value} className={`flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${selectedFont === font.value ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
+                            <RadioGroupItem value={font.value} />
+                            <span className={`${font.style} font-semibold`}>{font.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-4 border-t pt-6">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <Palette className="h-5 w-5" />
+                      Couleur du texte
+                    </h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      {colors.map((color) => (
+                        <button
+                          key={color.value}
+                          onClick={() => {setSelectedColor(color.value); setIsSaved(false);}}
+                          className={`flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-all ${selectedColor === color.value ? "border-primary scale-105 shadow-lg" : "border-gray-200 hover:border-gray-300"}`}
+                        >
+                          <div className="w-12 h-12 rounded-full border-2 border-gray-300" style={{ backgroundColor: color.color, boxShadow: color.value === 'white' ? 'inset 0 0 0 1px #e5e7eb' : 'none' }}></div>
+                          <span className="text-sm font-semibold">{color.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Options */}
-              <div className="space-y-6">
-                <Card className="shadow-elegant">
-                  <CardContent className="p-4 md:p-6 space-y-6">
-                    <h2 className="text-xl md:text-2xl font-bold">Options de personnalisation</h2>
-
-                    {/* Couleur maillot */}
-                    <div className="space-y-2">
-                      <Label>Couleur du maillot</Label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {jerseyColors.map((jersey) => (
-                          <button
-                            key={jersey.value}
-                            onClick={() => setJerseyColor(jersey.value)}
-                            className={`relative p-3 rounded-lg border-2 transition-all ${
-                              jerseyColor === jersey.value 
-                                ? "border-primary bg-primary/5 scale-105" 
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <img 
-                              src={jersey.image} 
-                              alt={jersey.label}
-                              className="w-full h-20 md:h-24 object-contain mb-2"
-                            />
-                            <p className="text-xs md:text-sm font-medium">{jersey.label}</p>
-                          </button>
-                        ))}
+              <Card className="shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5">
+                <CardContent className="p-6">
+                  <h3 className="text-2xl font-bold mb-4">💰 Récapitulatif</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-lg">
+                      <span>Maillot personnalisé</span>
+                      <span className="font-bold">299 DH</span>
+                    </div>
+                    {sloganEnabled && customSlogan.trim() && (
+                      <div className="flex justify-between text-lg text-green-600">
+                        <span>Slogan personnalisé</span>
+                        <span className="font-bold">+50 DH</span>
                       </div>
-                    </div>
-
-                    {/* Nom */}
-                    <div className="space-y-2">
-                      <Label htmlFor="customText">Nom personnalisé (max 15 caractères)</Label>
-                      <Input
-                        id="customText"
-                        value={customText}
-                        onChange={(e) => setCustomText(e.target.value.slice(0, 15).toUpperCase())}
-                        placeholder="ZAKARIA, DIMA MAGHRIB..."
-                        maxLength={15}
-                      />
-                      <p className="text-xs text-muted-foreground">{customText.length}/15 caractères</p>
-                    </div>
-
-                    {/* Numéro */}
-                    <div className="space-y-2">
-                      <Label htmlFor="customNumber">Numéro</Label>
-                      <Input
-                        id="customNumber"
-                        type="number"
-                        min="0"
-                        max="2050"
-                        value={customNumber}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || (parseInt(val) >= 0 && parseInt(val) <= 2050)) {
-                            setCustomNumber(val);
-                          }
-                        }}
-                        placeholder="10"
-                      />
-                    </div>
-
-                    {/* Police et Couleur */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="font">Police</Label>
-                        <Select value={selectedFont} onValueChange={setSelectedFont}>
-                          <SelectTrigger id="font">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {fonts.map((font) => (
-                              <SelectItem key={font.value} value={font.value}>
-                                {font.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Couleur</Label>
-                        <Select value={selectedColor} onValueChange={setSelectedColor}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {colors.map((color) => (
-                              <SelectItem key={color.value} value={color.value}>
-                                {color.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {getColorSuggestion() && (
-                      <p className="text-xs text-amber-600">{getColorSuggestion()}</p>
                     )}
-
-                    {/* Position */}
-                    <div className="space-y-2">
-                      <Label>Position</Label>
-                      <RadioGroup value={selectedPosition} onValueChange={setSelectedPosition}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="back" id="back" />
-                          <Label htmlFor="back" className="cursor-pointer">Dos</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="chest" id="chest" />
-                          <Label htmlFor="chest" className="cursor-pointer">Poitrine</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sleeve" id="sleeve" />
-                          <Label htmlFor="sleeve" className="cursor-pointer">Manche</Label>
-                        </div>
-                      </RadioGroup>
+                    <div className="border-t-2 pt-3 flex justify-between text-2xl font-bold text-primary">
+                      <span>Total</span>
+                      <span>{sloganEnabled && customSlogan.trim() ? 349 : 299} DH</span>
                     </div>
+                  </div>
 
-                    {/* Section Slogan */}
-                    <div className="pt-4 border-t border-border space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="slogan-checkbox" 
-                          checked={sloganEnabled}
-                          onCheckedChange={(checked) => setSloganEnabled(checked as boolean)}
-                        />
-                        <Label htmlFor="slogan-checkbox" className="cursor-pointer font-semibold">
-                          ☑ Ajouter un slogan (+50 DH)
-                        </Label>
-                      </div>
+                  <Button onClick={handleSaveCustomization} disabled={isSaved} size="lg" className="w-full mt-6 shadow-lg gap-2">
+                    <Save className="h-5 w-5" />
+                    {isSaved ? "✅ Enregistré" : "Enregistrer ma personnalisation"}
+                  </Button>
+                </CardContent>
+              </Card>
 
-                      {sloganEnabled && (
-                        <div className="space-y-4 pl-4 border-l-2 border-primary">
-                          <div className="space-y-2">
-                            <Label htmlFor="sloganText">Slogan (max 30 caractères)</Label>
-                            <Input
-                              id="sloganText"
-                              value={sloganText}
-                              onChange={(e) => setSloganText(e.target.value.slice(0, 30).toUpperCase())}
-                              placeholder="DIMA MAGHRIB, ALLEZ LES LIONS..."
-                              maxLength={30}
-                            />
-                            <p className="text-xs text-muted-foreground">{sloganText.length}/30 caractères</p>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Police slogan</Label>
-                              <Select value={sloganFont} onValueChange={setSloganFont}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {fonts.map((font) => (
-                                    <SelectItem key={font.value} value={font.value}>
-                                      {font.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Couleur slogan</Label>
-                              <Select value={sloganColor} onValueChange={setSloganColor}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {colors.map((color) => (
-                                    <SelectItem key={color.value} value={color.value}>
-                                      {color.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Taille du slogan</Label>
-                            <RadioGroup value={sloganSize} onValueChange={(val) => setSloganSize(val as any)}>
-                              <div className="flex gap-4">
-                                {sloganSizes.map((size) => (
-                                  <div key={size.value} className="flex items-center space-x-2">
-                                    <RadioGroupItem value={size.value} id={size.value} />
-                                    <Label htmlFor={size.value} className="cursor-pointer">
-                                      {size.label}
-                                    </Label>
-                                  </div>
-                                ))}
-                              </div>
-                            </RadioGroup>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Boutons d'action */}
-                    <div className="pt-4 border-t border-border space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-base md:text-lg font-semibold">Prix total:</span>
-                        <span className="text-xl md:text-2xl font-bold text-primary">
-                          {calculatePrice()} DH
-                        </span>
-                      </div>
-
-                      {/* Bouton Enregistrer */}
-                      <Button 
-                        onClick={handleSavePersonalization}
-                        className="w-full shadow-elegant bg-green-600 hover:bg-green-700" 
-                        size="lg"
-                        disabled={!customText && !customNumber && (!sloganEnabled || !sloganText)}
-                      >
-                        <Save className="mr-2 h-5 w-5" />
-                        {isSaved ? "✓ Personnalisation enregistrée" : "Enregistrer la personnalisation"}
-                      </Button>
-
-                      {/* ✅ BOUTON COMMANDER MAINTENANT */}
-                      <Button 
-                        onClick={handleOrderNow}
-                        className={`w-full shadow-elegant ${
-                          !isSaved ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        size="lg"
-                        disabled={!isSaved}
-                      >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Commander maintenant
-                      </Button>
-
-                      {/* Bouton Ajouter au panier (optionnel) */}
-                      <Button 
-                        onClick={handleAddToCart}
-                        className="w-full shadow-elegant"
-                        size="lg"
-                        variant="outline"
-                        disabled={!isSaved}
-                      >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Ou ajouter au panier
-                      </Button>
-
-                      {!isSaved && (
-                        <p className="text-xs text-center text-muted-foreground">
-                          Enregistrez d'abord votre personnalisation
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Info */}
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold mb-3 flex items-center text-blue-800 text-sm md:text-base">
-                      <Info className="h-5 w-5 mr-2" />
-                      Comment ça marche ?
-                    </h3>
-                    <ol className="text-xs md:text-sm space-y-2 text-blue-700">
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">1️⃣</span>
-                        <span>Personnalisez votre maillot (nom, numéro, slogan)</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">2️⃣</span>
-                        <span>Cliquez sur "Enregistrer la personnalisation"</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">3️⃣</span>
-                        <span>Cliquez sur "Commander maintenant"</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">4️⃣</span>
-                        <span><strong>Remplissez vos coordonnées</strong> (nom, téléphone, adresse)</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">5️⃣</span>
-                        <span>Validez - Votre commande est enregistrée ! ✅</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">6️⃣</span>
-                        <span>Nous vous contactons pour confirmer et livrer 📦</span>
-                      </li>
-                    </ol>
+              {isSaved && (
+                <Card className="shadow-lg border-2 border-primary animate-in fade-in slide-in-from-bottom">
+                  <CardContent className="p-6 space-y-4">
+                    <h3 className="text-2xl font-bold">📋 Vos coordonnées</h3>
                     
-                    <div className="mt-3 p-2 bg-blue-100 rounded-lg">
-                      <p className="text-xs text-blue-800 font-semibold">
-                        💡 Livraison rapide • Paiement à la livraison disponible
-                      </p>
+                    <div>
+                      <Label>Nom complet *</Label>
+                      <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ex: Zakaria Mihrab" className="mt-2" />
                     </div>
+
+                    <div>
+                      <Label>Téléphone *</Label>
+                      <Input type="tel" value={customerPhone} onChange={(e) => {setCustomerPhone(e.target.value); if (phoneError) validatePhone(e.target.value);}} placeholder="06 12 34 56 78" className={`mt-2 ${phoneError ? 'border-red-500' : ''}`} />
+                      {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+                    </div>
+
+                    <div>
+                      <Label>Ville</Label>
+                      <Input value={customerCity} onChange={(e) => setCustomerCity(e.target.value)} placeholder="Ex: Casablanca" className="mt-2" />
+                    </div>
+
+                    <div>
+                      <Label>Adresse</Label>
+                      <Textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Ex: 123 Rue Mohammed V" rows={2} className="mt-2 resize-none" />
+                    </div>
+
+                    <Button onClick={submitOrder} disabled={!customerName || !customerPhone || isSubmitting} size="lg" className="w-full shadow-lg gap-2">
+                      <ShoppingCart className="h-5 w-5" />
+                      {isSubmitting ? '⏳ Envoi en cours...' : '✅ Commander maintenant'}
+                    </Button>
                   </CardContent>
                 </Card>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* ✅ MODAL FORMULAIRE CLIENT */}
-      {showClientForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-auto shadow-2xl animate-in zoom-in slide-in-from-bottom">
-            <div className="p-6 space-y-4">
-              <h2 className="text-2xl font-bold">📋 Vos coordonnées</h2>
-              
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Nom complet *</label>
-                <input
-                  type="text"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Nom complet"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Téléphone *</label>
-                <input
-                  type="tel"
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="votre numéro de téléphone"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Ville</label>
-                <input
-                  type="text"
-                  value={clientCity}
-                  onChange={(e) => setClientCity(e.target.value)}
-                  placeholder="Ville"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Adresse</label>
-                <textarea
-                  value={clientAddress}
-                  onChange={(e) => setClientAddress(e.target.value)}
-                  placeholder="Adresse complète"
-                  rows={3}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button 
-                  onClick={() => setShowClientForm(false)} 
-                  disabled={isSubmitting}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Annuler
-                </Button>
-                <Button 
-                  onClick={submitOrder} 
-                  disabled={!clientName || !clientPhone || isSubmitting}
-                  className="flex-1"
-                >
-                  {isSubmitting ? '⏳ Envoi...' : '✅ Confirmer'}
-                </Button>
-              </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </main>
 
       <Footer />
     </div>
