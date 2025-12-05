@@ -264,7 +264,7 @@ const Index = () => {
         </section>
 
         <section className="py-16 md:py-20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#C8102E] via-[#C8102E] to-[#006233]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#C8102E] via-[#006233] to-[#C8102E]" />
           
           <div className="container px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center text-white">

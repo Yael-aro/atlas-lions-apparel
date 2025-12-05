@@ -24,6 +24,8 @@ import biria1Image from "@/assets/biria1.jpg";
 // ⚠️ corrige : le fichier est "minaturewhite.jpg"
 import MinatureWhiteImage from "@/assets/minaturewhite.jpg";
 
+import tarbouchImage from "@/assets/tarbouch.jpg";
+
 
 // ============================================
 // TYPES
@@ -63,7 +65,7 @@ export const products: Product[] = [
   {
   id: "1",
   name: "Maillot Maroc Premium",
-  price: 280,
+  price: 229,
   image: jerseyImage,
   images: [jerseyImage, backImage], // ✅ Images par défaut
   category: "Maillot",
@@ -95,7 +97,7 @@ export const products: Product[] = [
   {
   id: "2",
   name: "Pack Complet Supporter",
-  price: 280,
+  price: 319,
   image: MinatureImage,
   images: [
     MinatureImage,
@@ -179,7 +181,7 @@ export const products: Product[] = [
   {
     id: "4",
     name: "Écharpe Supporter",
-    price: 50,
+    price: 79,
     image: echapeImage,
     category: "Accessoires",
     description: "Écharpe officielle des supporters aux couleurs du Maroc",
@@ -190,9 +192,9 @@ export const products: Product[] = [
   },
   {
     id: "5",
-    name: "Casquette Atlas Lions",
-    price: 70,
-    image: accessoriesImage,
+    name: "Tarbouch traditionnel",
+    price: 69,
+    image: tarbouchImage,
     category: "Accessoires",
     description: "Casquette officielle Atlas Lions avec broderie",
     stock: 100,
@@ -207,7 +209,7 @@ export const products: Product[] = [
     image: siffletImage,
     category: "Accessoires",
     description: "Sifflet officiel des supporters",
-    stock: 120,
+    stock: 0,
     customizable: false,
     featured: false,
     // ❌ PAS de availableSizes

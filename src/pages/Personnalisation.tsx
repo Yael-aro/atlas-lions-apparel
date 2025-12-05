@@ -261,7 +261,7 @@ const Personnalisation = () => {
         sloganPrice = 50;
       }
 
-      const basePrice = 299;
+      const basePrice = 249;
       const totalPrice = basePrice + sloganPrice;
 
       const orderData = {
@@ -587,21 +587,7 @@ const Personnalisation = () => {
                     )}
                   </div>
 
-                  <div className="space-y-4 border-t pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="slogan-toggle" className="text-lg font-bold flex items-center gap-2">
-                          <MessageSquare className="h-5 w-5" />
-                          Slogan personnalisé
-                        </Label>
-                        <p className="text-sm text-green-600 font-semibold">+50 DH</p>
-                      </div>
-                      <input type="checkbox" id="slogan-toggle" checked={sloganEnabled} onChange={(e) => {setSloganEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
-                    </div>
-                    {sloganEnabled && (
-                      <Textarea value={customSlogan} onChange={(e) => {setCustomSlogan(e.target.value.slice(0, 30)); setIsSaved(false);}} placeholder="Ex: Dima Maghrib" maxLength={30} rows={2} className="text-lg resize-none" />
-                    )}
-                  </div>
+                 
 
                   <div className="space-y-4 border-t pt-6">
                     <h3 className="text-lg font-bold flex items-center gap-2">
@@ -650,7 +636,7 @@ const Personnalisation = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between text-lg">
                       <span>Maillot personnalisé</span>
-                      <span className="font-bold">299 DH</span>
+                      <span className="font-bold">249 DH</span>
                     </div>
                     {sloganEnabled && customSlogan.trim() && (
                       <div className="flex justify-between text-lg text-green-600">
@@ -660,7 +646,7 @@ const Personnalisation = () => {
                     )}
                     <div className="border-t-2 pt-3 flex justify-between text-2xl font-bold text-primary">
                       <span>Total</span>
-                      <span>{sloganEnabled && customSlogan.trim() ? 349 : 299} DH</span>
+                      <span>{sloganEnabled && customSlogan.trim() ? 349 : 249} DH</span>
                     </div>
                   </div>
 
