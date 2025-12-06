@@ -667,23 +667,23 @@ const Personnalisation = () => {
                     
                     <div>
                       <Label>Nom complet *</Label>
-                      <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ex: Zakaria Mihrab" className="mt-2" />
+                      <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Votre nom" className="mt-2" />
                     </div>
 
                     <div>
                       <Label>Téléphone *</Label>
-                      <Input type="tel" value={customerPhone} onChange={(e) => {setCustomerPhone(e.target.value); if (phoneError) validatePhone(e.target.value);}} placeholder="06 12 34 56 78" className={`mt-2 ${phoneError ? 'border-red-500' : ''}`} />
+                      <Input type="tel" value={customerPhone} onChange={(e) => {setCustomerPhone(e.target.value); if (phoneError) validatePhone(e.target.value);}} placeholder="Votre numéro de téléphone" className={`mt-2 ${phoneError ? 'border-red-500' : ''}`} />
                       {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
                     </div>
 
                     <div>
                       <Label>Ville</Label>
-                      <Input value={customerCity} onChange={(e) => setCustomerCity(e.target.value)} placeholder="Ex: Casablanca" className="mt-2" />
+                      <Input value={customerCity} onChange={(e) => setCustomerCity(e.target.value)} placeholder="Votre ville" className="mt-2" />
                     </div>
 
                     <div>
                       <Label>Adresse</Label>
-                      <Textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Ex: 123 Rue Mohammed V" rows={2} className="mt-2 resize-none" />
+                      <Textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Votre adresse" rows={2} className="mt-2 resize-none" />
                     </div>
 
                     <Button onClick={submitOrder} disabled={!customerName || !customerPhone || isSubmitting} size="lg" className="w-full shadow-lg gap-2">

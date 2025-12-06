@@ -25,7 +25,9 @@ import biria1Image from "@/assets/biria1.jpg";
 import MinatureWhiteImage from "@/assets/minaturewhite.jpg";
 
 import tarbouchImage from "@/assets/tarbouch.jpg";
-
+import survethoodieImage from "@/assets/survethoodie.png";
+import survetpontalonImage from "@/assets/survetpontalon.png";
+import ensembleImage from "@/assets/ensemble.png";
 
 // ============================================
 // TYPES
@@ -226,7 +228,23 @@ export const products: Product[] = [
     featured: false,
     // ❌ PAS de availableSizes
   },
+  
+  {
+    id: "8",
+    name: "Survêtement Maroc",
+    price: 349,
+    image: ensembleImage,
+    images: [,ensembleImage,survethoodieImage, survetpontalonImage],
+    category: "Vêtements",
+    description: "survetement officiel de l'équipe du Maroc ",
+    stock: 40,
+    customizable: false,
+    featured: false,
+    availableSizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  
 ];
+
 
 // ============================================
 // FONCTIONS UTILITAIRES

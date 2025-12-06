@@ -145,11 +145,11 @@ const Suivi = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Personnalisation:</span>
-                        <span className="font-semibold">ZAKARIA 10</span>
+                        <span className="font-semibold">Votre nom 10</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Adresse:</span>
-                        <span className="font-semibold text-right">Casablanca, Maroc</span>
+                        <span className="text-muted-foreground">Adresse</span>
+                        <span className="font-semibold text-right">votre ville </span>
                       </div>
                       <div className="flex justify-between text-lg pt-3 border-t border-border">
                         <span className="font-bold">Total payé:</span>
