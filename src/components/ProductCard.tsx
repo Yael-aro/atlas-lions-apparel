@@ -178,7 +178,7 @@ export const ProductCard = ({
 
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-bold text-sm">4.8</span>
+            <span className="font-bold text-sm"></span>
           </div>
           {stock && stock < 10 && (
             <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">

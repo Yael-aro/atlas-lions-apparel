@@ -52,7 +52,7 @@ const Countdown = () => {
     <div className="bg-gradient-to-r from-[#C8102E] via-[#C8102E] to-[#006233] py-8 px-4">
       <div className="container mx-auto">
         <div className="text-center text-white mb-6">
-          <h2 className="text-2xl md:text-4xl font-bold mb-2">🏆 CAN 2025 COMMENCE DANS</h2>
+          <h2 className="text-2xl md:text-4xl font-bold mb-2">CAN 2025 COMMENCE DANS</h2>
           <p className="text-lg md:text-xl opacity-90">Préparez-vous à supporter les LIONS D'ATLAS !</p>
         </div>
         
@@ -89,7 +89,7 @@ const Countdown = () => {
         <div className="text-center mt-6">
           <Link to="/boutique">
             <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-xl text-lg px-8 font-bold">
-              🛒 Commandez Maintenant
+              Commandez Maintenant
             </Button>
           </Link>
         </div>
