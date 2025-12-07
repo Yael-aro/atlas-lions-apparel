@@ -458,7 +458,7 @@ const Panier = () => {
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="font-semibold mb-3">📦 Résumé</div>
+                <div className="font-semibold mb-3">Details</div>
                 <div className="space-y-2 text-sm text-gray-600">
                   {items.map((item, i) => (
                     <div key={i}>• {item.name} × {item.quantity} = {item.price * item.quantity} DH</div>

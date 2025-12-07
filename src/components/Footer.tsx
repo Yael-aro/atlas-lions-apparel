@@ -25,7 +25,7 @@ export const Footer = () => {
               <a href="#" className="text-muted-foreground hover:text-primary transition-smooth">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-smooth">
+              <a href="https://www.instagram.com/atlasllions?igsh=c3BxdmZrMHl5OTc=" className="text-muted-foreground hover:text-primary transition-smooth">
                 <Instagram className="h-5 w-5" />
               </a>
             </div>
@@ -82,12 +82,12 @@ export const Footer = () => {
               <li className="flex items-center space-x-2 text-muted-foreground">
                 <Phone className="h-4 w-4" />
                 <span>
-                  +212 624-740054 <br /> +212 623-461209
+                  +212 770-257750
                 </span>
               </li>
               <li className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>contact@can2025.ma</span>
+                <span>contact@atlasllions.com</span>
               </li>
             </ul>
           </div>

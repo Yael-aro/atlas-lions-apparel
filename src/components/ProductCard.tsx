@@ -187,7 +187,17 @@ export const ProductCard = ({
           )}
           {customizable && (
             <div className="absolute top-14 left-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold z-10">
-              ✨ Personnalisable
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  window.location.href = `personnalisation`;
+                }}
+                type="button"
+                // className="underline"
+              >
+                Personnaliser
+              </button>
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

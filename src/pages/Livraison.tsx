@@ -1,7 +1,8 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Truck, MapPin, Clock, Package } from "lucide-react";
+import { Truck, MapPin, Clock, Package, Bold } from "lucide-react";
+import charikaImage from "@/assets/charika.jpg";
 
 const Livraison = () => {
   const zones = [
@@ -9,19 +10,19 @@ const Livraison = () => {
       name: "Grandes villes",
       cities: "Casablanca, Rabat, Marrakech, Fès, Tanger, Agadir, Meknès, Oujda, Kenitra, Tétouan",
       delay: "2-3 jours ouvrables",
-      price: "30-40 DH",
+      price: "GRATUIT",
     },
     {
       name: "Autres villes",
       cities: "Safi, El Jadida, Nador, Béni Mellal, Mohammedia, Khouribga, Larache...",
       delay: "3-5 jours ouvrables",
-      price: "40-50 DH",
+      price: "GRATUIT",
     },
     {
       name: "Zones rurales",
       cities: "Toutes les communes rurales du Maroc",
       delay: "5-7 jours ouvrables",
-      price: "50-60 DH",
+      price: "30-40 DH",
     },
   ];
 
@@ -155,7 +156,7 @@ const Livraison = () => {
                       <div className="ml-4">
                         <h3 className="font-semibold mb-1">Expédition</h3>
                         <p className="text-muted-foreground">
-                          Votre colis est confié à nos partenaires de livraison (Amana, Aramex, J&T Express).
+                          Votre colis est confié à nos partenaires de livraison 
                         </p>
                       </div>
                     </div>
@@ -180,10 +181,7 @@ const Livraison = () => {
                 <CardContent className="p-8">
                   <h2 className="text-xl font-bold mb-4 text-center">Nos partenaires de livraison</h2>
                   <div className="flex flex-wrap justify-center gap-8 text-muted-foreground">
-                    <span className="text-lg font-semibold">Amana (Poste Maroc)</span>
-                    <span className="text-lg font-semibold">Aramex</span>
-                    <span className="text-lg font-semibold">J&T Express</span>
-                    <span className="text-lg font-semibold">GLS Morocco</span>
+                    <img src={charikaImage} alt="Charika Logo" className="h-12 object-contain" />
                   </div>
                 </CardContent>
               </Card>

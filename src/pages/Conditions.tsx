@@ -196,9 +196,8 @@ const Conditions = () => {
                         Pour toute question concernant nos conditions de vente :
                       </p>
                       <ul className="space-y-1">
-                        <li>Email : contact@can2025.ma</li>
-                        <li>WhatsApp : +212 6XX XXX XXX</li>
-                        <li>Téléphone : +212 6XX XXX XXX</li>
+                        <li>Email : contact@atlasllions.com</li>
+                        <li>WhatsApp/Téléphone : +212 770-257750</li>
                       </ul>
                     </div>
                   </section>

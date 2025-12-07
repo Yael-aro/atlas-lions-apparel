@@ -29,6 +29,7 @@ export const Header = () => {
     { to: "/", label: "Accueil" },
     { to: "/boutique", label: "Boutique" },
     { to: "/personnalisation", label: "Personnalisation" },
+    { to: "/suivi", label: "Suivi de commande" },
   ];
 
   return (
@@ -48,6 +49,7 @@ export const Header = () => {
               className="h-12 w-auto transition-all duration-300 group-hover:drop-shadow-[0_0_10px_rgba(200,16,46,0.5)]"
             />
           </Link>
+        
 
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
