@@ -104,7 +104,7 @@ export const products: Product[] = [
   images: [
     MinatureImage,
     jerseyImage,
-    biria1Image,
+    tarbouchImage,
     flagImage,
     echapeImage,
     siffletImage,
@@ -124,7 +124,7 @@ export const products: Product[] = [
       images: [
         MinatureImage,    // ✅ Miniature rouge
         jerseyImage,      // Maillot
-        biria1Image,      // Chapeau
+        tarbouchImage,      // Chapeau
         flagImage,        // Drapeau
         echapeImage,      // Écharpe
         siffletImage,     // Sifflet
@@ -137,7 +137,7 @@ export const products: Product[] = [
       images: [
         MinatureWhiteImage,    // ⚠️ Change par MinatureWhiteImage si tu l'as
         jerseywhiteImage,      // Reste pareil
-        biria1Image,      // Reste pareil
+        tarbouchImage,      // Reste pareil
         flagImage,        // Reste pareil
         echapeImage,      // Reste pareil
         siffletImage,     // Reste pareil
@@ -149,32 +149,19 @@ export const products: Product[] = [
   // ============================================
   // VÊTEMENTS
   // ============================================
-  {
+
+   {
     id: "3",
-    name: "Short Maroc Premium",
-    price: 90,
-    image: ShortImage,
-    category: "Short",
-    description: "Short officiel de l'équipe du Maroc",
-    stock: 60,
+    name: "Survêtement Maroc",
+    price: 349,
+    image: ensembleImage,
+    images: [,ensembleImage,survethoodieImage, survetpontalonImage],
+    category: "Vêtements",
+    description: "survetement officiel de l'équipe du Maroc ",
+    stock: 40,
     customizable: false,
     featured: false,
-    availableSizes: ["S", "M", "L", "XL", "XXL"], // ✅ NOUVEAU
-    hasColorVariants: true,
-    colorVariants: [
-      {
-        color: "#C8102E",
-        colorName: "Rouge",
-        image: ShortImage,
-        images: [ShortImage],
-      },
-      {
-        color: "#FFFFFF",
-        colorName: "Blanc",
-        image: shortWhiteImage,
-        images: [shortWhiteImage],
-      },
-    ],
+    availableSizes: ["S", "M", "L", "XL", "XXL"],
   },
 
   // ============================================
@@ -204,44 +191,47 @@ export const products: Product[] = [
     featured: true,
     // ❌ PAS de availableSizes
   },
+
   {
     id: "6",
-    name: "Sifflet Officiel",
-    price: 70,
-    image: siffletImage,
-    category: "Accessoires",
-    description: "Sifflet officiel des supporters",
-    stock: 0,
-    customizable: false,
-    featured: false,
-    // ❌ PAS de availableSizes
-  },
-  {
-    id: "7",
     name: "Chapeau Bob",
     price: 70,
     image: biria1Image,
     category: "Accessoires",
     description: "Chapeau Bob aux couleurs du Maroc",
-    stock: 90,
+    stock: 0,
     customizable: false,
     featured: false,
     // ❌ PAS de availableSizes
   },
-  
-  {
-    id: "8",
-    name: "Survêtement Maroc",
-    price: 349,
-    image: ensembleImage,
-    images: [,ensembleImage,survethoodieImage, survetpontalonImage],
-    category: "Vêtements",
-    description: "survetement officiel de l'équipe du Maroc ",
-    stock: 40,
+    {
+    id: "7",
+    name: "Short Maroc Premium",
+    price: 90,
+    image: ShortImage,
+    category: "Short",
+    description: "Short officiel de l'équipe du Maroc",
+    stock: 60,
     customizable: false,
     featured: false,
-    availableSizes: ["S", "M", "L", "XL", "XXL"],
+    availableSizes: ["S", "M", "L", "XL", "XXL"], // ✅ NOUVEAU
+    hasColorVariants: true,
+    colorVariants: [
+      {
+        color: "#C8102E",
+        colorName: "Rouge",
+        image: ShortImage,
+        images: [ShortImage],
+      },
+      {
+        color: "#FFFFFF",
+        colorName: "Blanc",
+        image: shortWhiteImage,
+        images: [shortWhiteImage],
+      },
+    ],
   },
+ 
   
 ];
 
