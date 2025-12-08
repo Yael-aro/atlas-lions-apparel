@@ -1,6 +1,7 @@
-import { Facebook, Instagram, Mail, Phone } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
-import Logo from "@/assets/logo.png"; // ➤ ajout du logo
+import Logo from "@/assets/logo.png";
+import CharikaLogo from "@/assets/charika.jpg";
 
 export const Footer = () => {
   return (
@@ -10,7 +11,6 @@ export const Footer = () => {
 
           {/* Brand */}
           <div className="space-y-4">
-            {/* ➤ Votre LOGO */}
             <img
               src={Logo}
               alt="CAN 2025 Logo"
@@ -92,6 +92,24 @@ export const Footer = () => {
             </ul>
           </div>
 
+        </div>
+
+        {/* Partenaire de Livraison */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Truck className="h-5 w-5" />
+              <h4 className="font-semibold text-foreground">Partenaire de Livraison</h4>
+            </div>
+            <div className="flex items-center justify-center gap-2 bg-white rounded-xl px-6 py-4 shadow-md hover:shadow-lg transition-shadow">
+              <img
+                src={CharikaLogo}
+                alt="Charika Livraison"
+                className="h-12 w-auto object-contain"
+              />
+              <span className="text-sm font-semibold text-gray-700">Livraison rapide et fiable</span>
+            </div>
+          </div>
         </div>
 
         {/* Disclaimer */}
