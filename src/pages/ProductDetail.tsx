@@ -368,7 +368,7 @@ const ProductDetail = () => {
                   <CardContent className="p-6 space-y-3">
                     <div className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-green-600" />
-                      <p className="text-sm text-gray-700">Livraison gratuite +500 DH</p>
+                      <p className="text-sm text-gray-700">Livraison gratuite </p>
                     </div>
                     <div className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-green-600" />
