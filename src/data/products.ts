@@ -110,7 +110,7 @@ export const products: Product[] = [
     siffletImage,
   ], // ✅ Images par défaut
   category: "Pack",
-  description: "Pack complet supporter avec maillot, chapeau, drapeau, écharpe et sifflet",
+  description: "Pack complet supporter avec maillot, Tarbouch, drapeau, écharpe et sifflet",
   stock: 30,
   customizable: false,
   featured: true,
@@ -170,7 +170,7 @@ export const products: Product[] = [
   {
     id: "4",
     name: "Écharpe Supporter",
-    price: 79,
+    price: 89,
     image: echapeImage,
     category: "Accessoires",
     description: "Écharpe officielle des supporters aux couleurs du Maroc",

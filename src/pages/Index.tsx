@@ -235,7 +235,7 @@ const Index = () => {
               <img
                 src={morocoImage}
                 alt="Moroco - Collection CAN 2025"
-                className="w-full max-w-none h-[55vh] md:h-[75vh] lg:h-[85vh] object-contain"
+                className="w-full max-w-none h-[10vh] md:h-[20vh] lg:h-[30vh] object-contain"
                 loading="lazy"
               />
             </div>
