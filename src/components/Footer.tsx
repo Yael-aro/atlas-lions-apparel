@@ -2,6 +2,7 @@ import { Facebook, Instagram, Mail, Phone, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import Logo from "@/assets/logo.png";
 import CharikaLogo from "@/assets/charika.jpg";
+import ozomImage from "@/assets/ozom.png";
 
 export const Footer = () => {
   return (
@@ -106,6 +107,10 @@ export const Footer = () => {
                 src={CharikaLogo}
                 alt="Charika Livraison"
                 className="h-12 w-auto object-contain"
+              />
+              <img
+              src ={ozomImage}
+              className="h-8 w-auto object-contain"
               />
               <span className="text-sm font-semibold text-gray-700">Livraison rapide et fiable</span>
             </div>
