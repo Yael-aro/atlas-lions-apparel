@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Package, 
@@ -40,10 +39,8 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      // Date d'aujourd'hui
       const today = new Date().toISOString().split('T')[0];
       
-      // Total commandes du jour
       const { count: totalOrders, error: countError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
@@ -51,7 +48,6 @@ const AdminDashboard = () => {
 
       if (countError) throw countError;
 
-      // Chiffre d'affaires du jour
       const { data: ordersData, error: revenueError } = await supabase
         .from('orders')
         .select('total_price')
@@ -61,7 +57,6 @@ const AdminDashboard = () => {
 
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_price || 0), 0) || 0;
 
-      // Commandes en cours
       const { count: inProgress, error: progressError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
@@ -69,7 +64,6 @@ const AdminDashboard = () => {
 
       if (progressError) throw progressError;
 
-      // Commandes livrées
       const { count: delivered, error: deliveredError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
@@ -93,17 +87,16 @@ const AdminDashboard = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
+      // Request order_items explicitly so it's available for rendering
       let query = supabase
         .from('orders')
-        .select('*')
+        .select('*, order_items')
         .order('created_at', { ascending: false });
 
-      // Filtre par statut
       if (statusFilter) {
         query = query.eq('status', statusFilter);
       }
 
-      // Recherche
       if (search) {
         query = query.or(`customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_number.ilike.%${search}%`);
       }
@@ -121,16 +114,40 @@ const AdminDashboard = () => {
     }
   };
 
+  // Helper: fallback if order_items absent (legacy rows)
+  const normalizeOrderItemsFallback = (order) => {
+    if (!order) return [];
+    if (Array.isArray(order.order_items) && order.order_items.length > 0) return order.order_items;
+
+    // Build a fallback single-item array from legacy columns
+    const fallback = {
+      product_id: order.product_id || null,
+      product_name: order.product_name || 'Produit',
+      product_category: order.product_category || '',
+      product_size: order.product_size || '',
+      quantity: order.quantity || 1,
+      unit_price: order.product_price ?? order.total_price ?? 0,
+      total_price: order.total_price ?? (order.product_price ?? 0),
+      product_image_url: order.product_image_url || '',
+      preview_image_url: order.preview_image_url || '',
+      personalization: order.personalization || null
+    };
+    return [fallback];
+  };
+
   const fetchOrderDetail = async (orderId) => {
     try {
+      // Request order_items when loading a single order detail
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, order_items')
         .eq('id', orderId)
         .single();
 
       if (error) throw error;
 
+      // Ensure order_items exists (fallback to legacy fields)
+      data.order_items = normalizeOrderItemsFallback(data);
       setSelectedOrder(data);
       setShowModal(true);
     } catch (error) {
@@ -184,12 +201,14 @@ const AdminDashboard = () => {
   };
 
   const downloadImage = (imageDataUrl, orderNumber) => {
-    // L'image est stockée en base64 dans preview_image_url
     const link = document.createElement('a');
     link.href = imageDataUrl;
     link.download = `maillot-${orderNumber}.png`;
     link.click();
   };
+
+  const computeItemsSubtotal = (items = []) =>
+    items.reduce((s, it) => s + ((it.total_price ?? (it.unit_price * it.quantity)) || 0), 0);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -266,20 +285,15 @@ const AdminDashboard = () => {
         </button>
       </div>
       
-      {/* Statistiques */}
+      {/* Statistiques (unchanged) */}
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
         gap: '20px', 
         marginBottom: '30px' 
       }}>
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '24px', 
-          borderRadius: '12px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* ... same stat cards ... */}
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
@@ -289,23 +303,12 @@ const AdminDashboard = () => {
                 {stats.total_orders || 0}
               </div>
             </div>
-            <div style={{ 
-              padding: '12px', 
-              backgroundColor: '#dbeafe', 
-              borderRadius: '10px' 
-            }}>
+            <div style={{ padding: '12px', backgroundColor: '#dbeafe', borderRadius: '10px' }}>
               <Package size={24} color="#2563eb" />
             </div>
           </div>
         </div>
-        
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '24px', 
-          borderRadius: '12px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
@@ -315,23 +318,12 @@ const AdminDashboard = () => {
                 {stats.total_revenue?.toFixed(0) || 0} DH
               </div>
             </div>
-            <div style={{ 
-              padding: '12px', 
-              backgroundColor: '#d1fae5', 
-              borderRadius: '10px' 
-            }}>
+            <div style={{ padding: '12px', backgroundColor: '#d1fae5', borderRadius: '10px' }}>
               <TrendingUp size={24} color="#059669" />
             </div>
           </div>
         </div>
-        
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '24px', 
-          borderRadius: '12px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
@@ -341,23 +333,12 @@ const AdminDashboard = () => {
                 {stats.in_progress || 0}
               </div>
             </div>
-            <div style={{ 
-              padding: '12px', 
-              backgroundColor: '#fef3c7', 
-              borderRadius: '10px' 
-            }}>
+            <div style={{ padding: '12px', backgroundColor: '#fef3c7', borderRadius: '10px' }}>
               <Clock size={24} color="#f59e0b" />
             </div>
           </div>
         </div>
-        
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '24px', 
-          borderRadius: '12px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
@@ -367,68 +348,29 @@ const AdminDashboard = () => {
                 {stats.delivered || 0}
               </div>
             </div>
-            <div style={{ 
-              padding: '12px', 
-              backgroundColor: '#d1fae5', 
-              borderRadius: '10px' 
-            }}>
+            <div style={{ padding: '12px', backgroundColor: '#d1fae5', borderRadius: '10px' }}>
               <CheckCircle size={24} color="#059669" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filtres et Recherche */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '20px', 
-        borderRadius: '12px', 
-        marginBottom: '20px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: '1px solid #e5e7eb'
-      }}>
+      {/* Filtres & search (unchanged) */}
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
-            <Search 
-              size={18} 
-              style={{ 
-                position: 'absolute', 
-                left: '12px', 
-                top: '50%', 
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} 
-            />
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
             <input
               type="text"
               placeholder="Rechercher par nom, téléphone, numéro..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && fetchOrders()}
-              style={{ 
-                width: '100%', 
-                padding: '12px 12px 12px 40px', 
-                fontSize: '14px', 
-                border: '2px solid #e5e7eb', 
-                borderRadius: '8px',
-                outline: 'none'
-              }}
+              style={{ width: '100%', padding: '12px 12px 12px 40px', fontSize: '14px', border: '2px solid #e5e7eb', borderRadius: '8px', outline: 'none' }}
             />
           </div>
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: '12px 16px',
-              fontSize: '14px',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              outline: 'none',
-              cursor: 'pointer',
-              backgroundColor: 'white'
-            }}
-          >
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: '12px 16px', fontSize: '14px', border: '2px solid #e5e7eb', borderRadius: '8px', outline: 'none', cursor: 'pointer', backgroundColor: 'white' }}>
             <option value="">Tous les statuts</option>
             <option value="pending">En attente</option>
             <option value="confirmed">Confirmée</option>
@@ -437,47 +379,16 @@ const AdminDashboard = () => {
             <option value="delivered">Livrée</option>
           </select>
           
-          <button 
-            onClick={fetchOrders}
-            disabled={loading}
-            style={{ 
-              padding: '12px 24px', 
-              backgroundColor: '#2563eb', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px', 
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
+          <button onClick={fetchOrders} disabled={loading} style={{ padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.6 : 1 }}>
             <Search size={16} />
             {loading ? 'Recherche...' : 'Rechercher'}
           </button>
         </div>
       </div>
 
-      {/* Liste des commandes */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '24px', 
-        borderRadius: '12px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: '1px solid #e5e7eb'
-      }}>
-        <h2 style={{ 
-          fontSize: '20px', 
-          fontWeight: 'bold', 
-          marginBottom: '20px', 
-          color: '#111',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
+      {/* Orders list */}
+      <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', color: '#111', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Package size={24} />
           Commandes ({orders.length})
         </h2>
@@ -495,319 +406,163 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {orders.map((order) => (
-              <div key={order.id} style={{ 
-                padding: '20px', 
-                border: '2px solid #e5e7eb', 
-                borderRadius: '12px',
-                display: 'flex',
-                gap: '20px',
-                alignItems: 'start',
-                transition: 'all 0.2s',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
-              >
-                {/* Image preview */}
-                {order.preview_image_url && (
-                  <img 
-                    src={order.preview_image_url}
-                    alt="Maillot"
-                    style={{ 
-                      width: '120px', 
-                      height: '120px', 
-                      objectFit: 'contain', 
-                      borderRadius: '8px', 
-                      border: '2px solid #e5e7eb',
-                      backgroundColor: '#f9fafb'
-                    }}
-                  />
-                )}
-                
-                {/* Infos */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    fontWeight: 'bold', 
-                    fontSize: '20px', 
-                    marginBottom: '8px',
-                    color: '#111'
-                  }}>
-                    #{order.order_number}
-                  </div>
+            {orders.map((order) => {
+              const items = order.order_items || normalizeOrderItemsFallback(order);
+              const firstItem = items[0] || {};
+              return (
+                <div key={order.id} style={{ padding: '20px', border: '2px solid #e5e7eb', borderRadius: '12px', display: 'flex', gap: '20px', alignItems: 'start', transition: 'all 0.2s', cursor: 'pointer' }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}>
+                  {/* Image preview - first item */}
+                  {firstItem.preview_image_url && (
+                    <img src={firstItem.preview_image_url} alt="Aperçu produit" style={{ width: '120px', height: '120px', objectFit: 'contain', borderRadius: '8px', border: '2px solid #e5e7eb', backgroundColor: '#f9fafb' }} />
+                  )}
                   
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: '6px',
-                    fontSize: '14px',
-                    color: '#6b7280'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <User size={14} />
-                      {order.customer_name || 'Client'}
+                  {/* Infos */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '20px', marginBottom: '8px', color: '#111' }}>
+                      #{order.order_number}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Phone size={14} />
-                      {order.customer_phone || 'N/A'}
-                    </div>
-                    {order.customer_city && (
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '14px', color: '#6b7280' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <MapPin size={14} />
-                        {order.customer_city}
+                        <User size={14} />
+                        {order.customer_name || 'Client'}
                       </div>
-                    )}
-                  </div>
-                  
-                  <div style={{ 
-                    marginTop: '12px',
-                    padding: '12px',
-                    backgroundColor: '#f9fafb',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    color: '#374151'
-                  }}>
-                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                      Maillot {order.jersey_color === 'red' ? '🔴 Rouge' : '⚪ Blanc'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Phone size={14} />
+                        {order.customer_phone || 'N/A'}
+                      </div>
+                      {order.customer_city && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <MapPin size={14} />
+                          {order.customer_city}
+                        </div>
+                      )}
                     </div>
-                    {order.name_enabled && order.name_text && (
-                      <div>• Nom: {order.name_text}</div>
-                    )}
-                    {order.number_enabled && order.number_text && (
-                      <div>• Numéro: #{order.number_text}</div>
-                    )}
-                    {order.slogan_enabled && order.slogan_text && (
-                      <div>• Slogan: {order.slogan_text}</div>
-                    )}
-                  </div>
-                  
-                  <div style={{ 
-                    marginTop: '8px', 
-                    fontSize: '12px', 
-                    color: '#9ca3af',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}>
-                    <Calendar size={12} />
-                    {new Date(order.created_at).toLocaleDateString('fr-FR')} à {new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-                
-                {/* Prix et Actions */}
-                <div style={{ 
-                  minWidth: '200px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px'
-                }}>
-                  <div style={{ 
-                    fontSize: '32px', 
-                    fontWeight: 'bold', 
-                    color: '#059669',
-                    textAlign: 'right'
-                  }}>
-                    {order.total_price} DH
-                  </div>
-                  
-                  <div style={{ textAlign: 'right' }}>
-                    {getStatusBadge(order.status)}
-                  </div>
-                  
-                  <select 
-                    value={order.status}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      updateStatus(order.id, e.target.value);
-                    }}
-                    style={{ 
-                      padding: '8px 12px', 
-                      borderRadius: '6px', 
-                      border: '2px solid #e5e7eb',
-                      fontSize: '13px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      backgroundColor: 'white'
-                    }}
-                  >
-                    <option value="pending">En attente</option>
-                    <option value="confirmed">Confirmée</option>
-                    <option value="in_production">En production</option>
-                    <option value="shipped">Expédiée</option>
-                    <option value="delivered">Livrée</option>
-                  </select>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        fetchOrderDetail(order.id);
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        padding: '8px 12px',
-                        backgroundColor: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Eye size={14} />
-                      Détails
-                    </button>
                     
-                    {order.customer_phone && (
-                      <a 
-                        href={`https://wa.me/212${order.customer_phone.replace(/^0/, '').replace(/\s/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          padding: '8px 12px',
-                          backgroundColor: '#25D366',
-                          color: 'white',
-                          textDecoration: 'none',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600'
-                        }}
-                      >
-                        <MessageCircle size={14} />
-                        WhatsApp
-                      </a>
-                    )}
+                    <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px', fontSize: '14px', color: '#374151' }}>
+                      <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                        {items.length} produit{items.length > 1 ? 's' : ''} commandé{items.length > 1 ? 's' : ''}
+                      </div>
+                      {/* lister les produits (nom × qté) */}
+                      {items.map((it, idx) => (
+                        <div key={idx} style={{ marginTop: idx === 0 ? 0 : 6 }}>
+                          • {it.product_name} {it.product_size ? `- Taille: ${it.product_size}` : ''} × {it.quantity}
+                        </div>
+                      ))}
+                    </div>
                     
-                    {order.preview_image_url && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadImage(order.preview_image_url, order.order_number);
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          padding: '8px 12px',
-                          backgroundColor: 'white',
-                          color: '#374151',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Download size={14} />
-                        Image
+                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={12} />
+                      {new Date(order.created_at).toLocaleDateString('fr-FR')} à {new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  
+                  {/* Prix et Actions */}
+                  <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#059669', textAlign: 'right' }}>
+                      {order.total_price} DH
+                    </div>
+                    
+                    <div style={{ textAlign: 'right' }}>
+                      {getStatusBadge(order.status)}
+                    </div>
+                    
+                    <select value={order.status} onChange={(e) => { e.stopPropagation(); updateStatus(order.id, e.target.value); }} style={{ padding: '8px 12px', borderRadius: '6px', border: '2px solid #e5e7eb', fontSize: '13px', fontWeight: '500', cursor: 'pointer', backgroundColor: 'white' }}>
+                      <option value="pending">En attente</option>
+                      <option value="confirmed">Confirmée</option>
+                      <option value="in_production">En production</option>
+                      <option value="shipped">Expédiée</option>
+                      <option value="delivered">Livrée</option>
+                    </select>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); fetchOrderDetail(order.id); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                        <Eye size={14} />
+                        Détails
                       </button>
-                    )}
+                      
+                      {order.customer_phone && (
+                        <a href={`https://wa.me/212${order.customer_phone.replace(/^0/, '').replace(/\s/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 12px', backgroundColor: '#25D366', color: 'white', textDecoration: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
+                          <MessageCircle size={14} />
+                          WhatsApp
+                        </a>
+                      )}
+                      
+                      {firstItem.preview_image_url && (
+                        <button onClick={(e) => { e.stopPropagation(); downloadImage(firstItem.preview_image_url, order.order_number); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 12px', backgroundColor: 'white', color: '#374151', border: '2px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                          <Download size={14} />
+                          Image
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Modal Détails */}
       {showModal && selectedOrder && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}
-        onClick={() => setShowModal(false)}
-        >
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            maxWidth: '800px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            position: 'relative'
-          }}
-          onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              position: 'sticky',
-              top: 0,
-              backgroundColor: 'white',
-              padding: '20px',
-              borderBottom: '2px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              zIndex: 1
-            }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                Commande #{selectedOrder.order_number}
-              </h2>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{
-                  padding: '8px',
-                  backgroundColor: '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }} onClick={() => setShowModal(false)}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '900px', width: '100%', maxHeight: '90vh', overflow: 'auto', position: 'relative', paddingBottom: 24 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ position: 'sticky', top: 0, backgroundColor: 'white', padding: '20px', borderBottom: '2px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>Commande #{selectedOrder.order_number}</h2>
+              <button onClick={() => setShowModal(false)} style={{ padding: '8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ padding: '24px' }}>
-              {/* Image */}
-              {selectedOrder.preview_image_url && (
-                <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-                  <img 
-                    src={selectedOrder.preview_image_url}
-                    alt="Maillot"
-                    style={{ 
-                      maxWidth: '100%', 
-                      maxHeight: '400px',
-                      borderRadius: '12px',
-                      border: '2px solid #e5e7eb'
-                    }}
-                  />
+              {/* Produits inclus */}
+              <div style={{ marginBottom: '18px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: 12 }}>Produits dans la commande</h3>
+                {(selectedOrder.order_items || []).map((it, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px', borderRadius: 8, border: '1px solid #f3f4f6', marginBottom: 10 }}>
+                    {it.preview_image_url ? (
+                      <img src={it.preview_image_url} alt={it.product_name} style={{ width: 88, height: 88, objectFit: 'cover', borderRadius: 8 }} />
+                    ) : it.product_image_url ? (
+                      <img src={it.product_image_url} alt={it.product_name} style={{ width: 88, height: 88, objectFit: 'cover', borderRadius: 8 }} />
+                    ) : (
+                      <div style={{ width: 88, height: 88, backgroundColor: '#f3f4f6', borderRadius: 8 }} />
+                    )}
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontWeight: 800 }}>{it.product_name || 'Produit'}</div>
+                        <div style={{ fontWeight: 700, color: '#059669' }}>{(it.total_price || (it.unit_price * it.quantity) || 0)} DH</div>
+                      </div>
+                      <div style={{ color: '#6b7280', marginTop: 6 }}>
+                        {it.product_category || ''} {it.product_size ? `• Taille: ${it.product_size}` : ''}
+                      </div>
+                      <div style={{ marginTop: 8 }}>
+                        Quantité: <strong>{it.quantity}</strong> — Prix unitaire: <strong>{it.unit_price ?? it.product_price ?? 0} DH</strong>
+                      </div>
+                      {it.personalization && (
+                        <div style={{ marginTop: 8, fontSize: 13, color: '#374151' }}>
+                          Personnalisation: {it.personalization.name?.text ? `Nom: ${it.personalization.name.text}` : ''}
+                          {it.personalization.number?.text ? ` • Numéro: ${it.personalization.number.text}` : ''}
+                          {it.personalization.slogan?.text ? ` • Slogan: ${it.personalization.slogan.text}` : ''}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!selectedOrder.order_items || selectedOrder.order_items.length === 0) && (
+                  <div style={{ color: '#6b7280' }}>Aucun produit listé dans order_items.</div>
+                )}
+
+                <div style={{ marginTop: 8, fontWeight: 700 }}>
+                  Sous-total produits : {computeItemsSubtotal(selectedOrder.order_items).toFixed(2)} DH
                 </div>
-              )}
+              </div>
 
               {/* Infos Client */}
-              <div style={{ 
-                backgroundColor: '#f9fafb',
-                padding: '20px',
-                borderRadius: '8px',
-                marginBottom: '20px'
-              }}>
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: 'bold', 
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
+              <div style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <User size={20} />
                   Informations client
                 </h3>
@@ -831,138 +586,32 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Personnalisation */}
-              <div style={{ 
-                backgroundColor: '#f9fafb',
-                padding: '20px',
-                borderRadius: '8px',
-                marginBottom: '20px'
-              }}>
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: 'bold', 
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <Package size={20} />
-                  Personnalisation
-                </h3>
-                <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
-                  <div><strong>Couleur:</strong> {selectedOrder.jersey_color === 'red' ? '🔴 Rouge' : '⚪ Blanc'}</div>
-                  {selectedOrder.name_enabled && (
-                    <div><strong>Nom:</strong> {selectedOrder.name_text} ({selectedOrder.name_font}, {selectedOrder.name_color})</div>
-                  )}
-                  {selectedOrder.number_enabled && (
-                    <div><strong>Numéro:</strong> #{selectedOrder.number_text}</div>
-                  )}
-                  {selectedOrder.slogan_enabled && (
-                    <div><strong>Slogan:</strong> {selectedOrder.slogan_text}</div>
-                  )}
-                </div>
-              </div>
-
               {/* Commande */}
-              <div style={{ 
-                backgroundColor: '#f9fafb',
-                padding: '20px',
-                borderRadius: '8px'
-              }}>
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: 'bold', 
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <TrendingUp size={20} />
-                  Commande
-                </h3>
+              <div style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Détails commande</h3>
                 <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
                   <div><strong>Prix total:</strong> <span style={{ fontSize: '20px', color: '#059669', fontWeight: 'bold' }}>{selectedOrder.total_price} DH</span></div>
-                  <div><strong>Statut:</strong> {getStatusBadge(selectedOrder.status)}</div>
-                  <div><strong>Date création:</strong> {new Date(selectedOrder.created_at).toLocaleString('fr-FR')}</div>
-                  {selectedOrder.notes && (
-                    <div><strong>Notes:</strong> {selectedOrder.notes}</div>
-                  )}
+                  <div style={{ marginTop: 8 }}><strong>Statut:</strong> {getStatusBadge(selectedOrder.status)}</div>
+                  <div style={{ marginTop: 8 }}><strong>Date création:</strong> {new Date(selectedOrder.created_at).toLocaleString('fr-FR')}</div>
+                  {selectedOrder.notes && (<div style={{ marginTop: 8 }}><strong>Notes:</strong> {selectedOrder.notes}</div>)}
                 </div>
               </div>
 
               {/* Actions */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '12px', 
-                marginTop: '24px',
-                borderTop: '2px solid #e5e7eb',
-                paddingTop: '24px'
-              }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', borderTop: '2px solid #e5e7eb', paddingTop: '24px' }}>
                 {selectedOrder.customer_phone && (
-                  <a 
-                    href={`https://wa.me/212${selectedOrder.customer_phone.replace(/^0/, '').replace(/\s/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '12px',
-                      backgroundColor: '#25D366',
-                      color: 'white',
-                      textDecoration: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600'
-                    }}
-                  >
+                  <a href={`https://wa.me/212${selectedOrder.customer_phone.replace(/^0/, '').replace(/\s/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', backgroundColor: '#25D366', color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}>
                     <MessageCircle size={16} />
                     WhatsApp
                   </a>
                 )}
                 {selectedOrder.preview_image_url && (
-                  <button
-                    onClick={() => downloadImage(selectedOrder.preview_image_url, selectedOrder.order_number)}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '12px',
-                      backgroundColor: 'white',
-                      color: '#374151',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
+                  <button onClick={() => downloadImage(selectedOrder.preview_image_url, selectedOrder.order_number)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', backgroundColor: 'white', color: '#374151', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                     <Download size={16} />
                     Télécharger
                   </button>
                 )}
-                <button
-                  onClick={() => deleteOrder(selectedOrder.id)}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '12px',
-                    backgroundColor: '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
+                <button onClick={() => deleteOrder(selectedOrder.id)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                   <Trash2 size={16} />
                   Supprimer
                 </button>
@@ -971,7 +620,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-      
+
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }

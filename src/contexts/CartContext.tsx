@@ -1,19 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export interface CartItem {
+interface CartItem {
   id: string;
   name: string;
   price: number;
   image: string;
   category: string;
+  customizable: boolean;
+  size?: string;
   quantity: number;
-  customizable?: boolean;
-  size?: string; // ✅ NOUVEAU
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  addToCart: (item: Omit<CartItem, "id"> & { id: string }) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -22,56 +22,45 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
-    try {
-      const savedCart = localStorage.getItem('cart');
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch {
-      return [];
-    }
+    const saved = localStorage.getItem("atlas-cart");
+    return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem('cart', JSON.stringify(items));
-    } catch (error) {
-      console.error('Erreur sauvegarde panier:', error);
-    }
+    localStorage.setItem("atlas-cart", JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
-    setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === newItem.id);
-      
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+  const addToCart = (item: CartItem) => {
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
         );
       }
-      
-      return [...prevItems, { ...newItem, quantity: 1 }];
+      return [...prev, item];
     });
   };
 
   const removeFromCart = (id: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) return;
-    
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      )
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
   };
 
   const clearCart = () => {
     setItems([]);
+    localStorage.removeItem("atlas-cart");
   };
 
   const getTotalPrice = () => {
@@ -97,7 +86,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within CartProvider');
+    throw new Error("useCart must be used within CartProvider");
   }
   return context;
 };

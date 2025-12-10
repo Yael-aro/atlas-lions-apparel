@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import maillotRouge from '@/assets/maillot-rouge-model.png';
 import maillotBlanc from '@/assets/maillot-blanc-model.png';
+import morocoImage from '@/assets/moroco.png';
+import { title } from 'process';
 
 const JerseyShowcase = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

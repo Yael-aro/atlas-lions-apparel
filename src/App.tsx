@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext.tsx";
 import Index from "./pages/Index";
 import Boutique from "./pages/Boutique";
+import ProductDetail from "./pages/ProductDetail";
 import Personnalisation from "./pages/Personnalisation";
 import Panier from "./pages/Panier";
 import Contact from "./pages/Contact";
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/boutique" element={<Boutique />} />
+            <Route path="/produit/:id" element={<ProductDetail />} />
             <Route path="/personnalisation" element={<Personnalisation />} />
             <Route path="/panier" element={<Panier />} />
             <Route path="/contact" element={<Contact />} />

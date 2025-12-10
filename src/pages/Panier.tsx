@@ -81,6 +81,7 @@ const Panier = () => {
     setShowCheckout(true);
   };
 
+  // MAIN FIX: create ONE order with order_items array and also populate legacy NOT NULL columns
   const handleSubmitOrder = async () => {
     if (!customerName.trim()) {
       toast.error("Nom requis");
@@ -98,8 +99,9 @@ const Panier = () => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
       const orderNumber = `CMD-${timestamp}-${random}`;
-      
-      const orderPromises = items.map(async (item) => {
+
+      // Build order_items array (with personalization if present)
+      const orderItems = await Promise.all(items.map(async (item) => {
         let personalizationData = null;
         if (item.customizable && item.id) {
           const savedData = localStorage.getItem(`personalization-${item.id}`);
@@ -115,81 +117,59 @@ const Panier = () => {
         const isJersey = item.category === 'Maillots' || item.category === 'Maillot';
         const defaultColor = isJersey ? 'red' : 'white';
 
-        const orderData: any = {
-          order_number: `${orderNumber}-${item.id}`,
-          personalization_id: item.id || `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          customer_name: customerName.trim(),
-          customer_phone: customerPhone.replace(/\s/g, ''),
-          customer_address: customerAddress.trim() || '',
-          customer_city: customerCity.trim() || '',
-          
+        return {
+          product_id: item.id || null,
           product_name: item.name,
-          product_price: item.price,
-          product_image_url: item.image,
           product_category: item.category,
           product_size: item.size || '',
-          
-          jersey_color: defaultColor,
+          quantity: item.quantity,
+          unit_price: item.price,
           total_price: item.price * item.quantity,
-          status: 'pending',
-          notes: `📦 ${item.name} - Quantité: ${item.quantity} - Catégorie: ${item.category}${item.size ? ` - Taille: ${item.size}` : ''}${promoCode ? ` - Code: ${promoCode}` : ''}`,
-          
-          name_enabled: false,
-          name_text: '',
-          name_font: 'montserrat',
-          name_color: 'gold',
-          name_position_x: 50,
-          name_position_y: 35,
-          number_enabled: false,
-          number_text: '',
-          number_font: 'montserrat',
-          number_color: 'gold',
-          number_position_x: 50,
-          number_position_y: 50,
-          slogan_enabled: false,
-          slogan_text: '',
-          slogan_font: 'montserrat',
-          slogan_color: 'gold',
-          slogan_size: 'medium',
-          slogan_position_x: 50,
-          slogan_position_y: 65,
-          selected_position: 'back',
-          preview_image_url: ''
+          product_image_url: item.image || '',
+          preview_image_url: (personalizationData && personalizationData.previewImage) ? personalizationData.previewImage : (item.image || ''),
+          personalization: personalizationData || null,
+          jersey_color: (personalizationData && personalizationData.jerseyColor) ? personalizationData.jerseyColor : defaultColor
         };
+      }));
 
-        if (personalizationData) {
-          orderData.jersey_color = personalizationData.jerseyColor || defaultColor;
-          orderData.name_enabled = personalizationData.name?.enabled || false;
-          orderData.name_text = personalizationData.name?.text || '';
-          orderData.name_font = personalizationData.name?.font || 'montserrat';
-          orderData.name_color = personalizationData.name?.color || 'gold';
-          orderData.name_position_x = personalizationData.name?.position?.x || 50;
-          orderData.name_position_y = personalizationData.name?.position?.y || 35;
-          orderData.number_enabled = personalizationData.number?.enabled || false;
-          orderData.number_text = personalizationData.number?.text || '';
-          orderData.number_font = personalizationData.number?.font || 'montserrat';
-          orderData.number_color = personalizationData.number?.color || 'gold';
-          orderData.number_position_x = personalizationData.number?.position?.x || 50;
-          orderData.number_position_y = personalizationData.number?.position?.y || 50;
-          orderData.slogan_enabled = personalizationData.slogan?.enabled || false;
-          orderData.slogan_text = personalizationData.slogan?.text || '';
-          orderData.slogan_font = personalizationData.slogan?.font || 'montserrat';
-          orderData.slogan_color = personalizationData.slogan?.color || 'gold';
-          orderData.slogan_size = personalizationData.slogan?.size || 'medium';
-          orderData.slogan_position_x = personalizationData.slogan?.position?.x || 50;
-          orderData.slogan_position_y = personalizationData.slogan?.position?.y || 65;
-          orderData.selected_position = personalizationData.selectedPosition || 'back';
-          orderData.preview_image_url = personalizationData.previewImage || '';
-        }
+      // Use first item to populate legacy NOT NULL columns (fallbacks)
+      const first = orderItems[0] || {};
+      const legacyProductName = first.product_name || (items[0]?.name) || "Multiple items";
+      const legacyUnitPrice = first.unit_price ?? (items[0]?.price) ?? finalTotal;
+      const legacyCategory = first.product_category || (items[0]?.category) || '';
+      const legacySize = first.product_size || (items[0]?.size) || '';
+      const legacyImage = first.product_image_url || (items[0]?.image) || '';
 
-        const { error } = await supabase
-          .from('orders')
-          .insert([orderData]);
+      // Create a single order record containing all items
+      const orderData: any = {
+        order_number: orderNumber,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.replace(/\s/g, ''),
+        customer_address: customerAddress.trim() || '',
+        customer_city: customerCity.trim() || '',
+        // legacy fields to satisfy NOT NULL constraints
+        product_name: legacyProductName,
+        product_price: legacyUnitPrice,
+        product_category: legacyCategory,
+        product_size: legacySize,
+        product_image_url: legacyImage,
+        // new unified fields
+        total_price: finalTotal,
+        status: 'pending',
+        notes: `Commande de ${items.length} article(s). ${promoCode ? `Code promo: ${promoCode}` : ''}`,
+        order_items: orderItems, // requires orders.order_items jsonb column
+        preview_image_url: orderItems[0]?.preview_image_url || '',
+        created_at: new Date().toISOString()
+      };
 
-        if (error) throw error;
-      });
+      // Insert single order
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+        .single();
 
-      await Promise.all(orderPromises);
+      if (error) throw error;
 
       toast.dismiss(loadingToast);
       toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
