@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="fr-MA">
     <head>
     <meta charset="UTF-8" />
@@ -21,8 +22,8 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://atlasllions.com/" />
     <meta property="og:site_name" content="Atlas Lions Apparel" />
-    <meta property="og:title" content="Boutique CAN 2025 Maroc 🇲🇦 | Maillots Premium Atlas Lions" />
-    <meta property="og:description" content="Boutique officielle CAN 2025 ⚽ Maillots personnalisés • Accessoires premium • Livraison rapide partout au Maroc 🇲🇦" />
+    <meta property="og:title" content="Boutique CAN 2025 Maroc 🇲 | Maillots Premium Atlas Lions" />
+    <meta property="og:description" content="Boutique officielle CAN 2025  Maillots personnalisés • Accessoires premium • Livraison rapide partout au Maroc " />
     <meta property="og:image" content="https://atlasllions.com/lienimage.jpg" />
     <meta property="og:image:secure_url" content="https://atlasllions.com/lienimage.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -34,8 +35,8 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://atlasllions.com/" />
-    <meta name="twitter:title" content="Boutique CAN 2025 Maroc 🇲🇦 | Maillots Premium Atlas Lions" />
-    <meta name="twitter:description" content="Boutique officielle CAN 2025 ⚽ Maillots personnalisés • Accessoires premium • Livraison rapide partout au Maroc 🇲🇦" />
+    <meta name="twitter:title" content="Boutique CAN 2025 Maroc 🇲 | Maillots Premium Atlas Lions" />
+    <meta name="twitter:description" content="Boutique officielle CAN 2025  Maillots personnalisés • Accessoires premium • Livraison rapide partout au Maroc " />
     <meta name="twitter:image" content="https://atlasllions.com/lienimage.jpg" />
     <meta name="twitter:image:alt" content="Boutique CAN 2025 Maroc - Atlas Lions Apparel" />
     <meta name="twitter:creator" content="@AtlasLions" />
@@ -54,48 +55,9 @@
     
     <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="/lienimage.jpg" />
-
-    <!-- ============================================ -->
-    <!-- FACEBOOK PIXEL CODE -->
-    <!-- ============================================ -->
-    <!-- <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      
-      // ⚠️ REMPLACE 'TON_FACEBOOK_PIXEL_ID' PAR TON VRAI ID
-      fbq('init', 'TON_FACEBOOK_PIXEL_ID');
-      fbq('track', 'PageView');
-    </script> -->
-
-    <!-- ============================================ -->
-    <!-- TIKTOK PIXEL CODE -->
-    <!-- ============================================ -->
-    <script>
-      !function (w, d, t) {
-        w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
-        var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
-        ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-        
-        // ✅ TON VRAI ID TIKTOK
-        ttq.load('D4U6I8JC77UA9I4QNVM0');
-        ttq.page();
-      }(window, document, 'ttq');
-    </script>
   </head>
 
   <body>
-    <!-- Facebook Pixel Noscript -->
-    <noscript>
-      <img height="1" width="1" style="display:none"
-      src="https://www.facebook.com/tr?id=TON_FACEBOOK_PIXEL_ID&ev=PageView&noscript=1"/>
-    </noscript>
-
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

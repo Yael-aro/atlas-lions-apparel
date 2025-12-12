@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from '@/lib/supabase';
+import { trackInitiateCheckout, trackPurchase } from '@/hooks/useTracking';
 
 const Panier = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
@@ -78,10 +79,13 @@ const Panier = () => {
       toast.error("Votre panier est vide");
       return;
     }
+    
+    // 🚀 TRACKING: Début du checkout
+    trackInitiateCheckout(items, finalTotal);
+    
     setShowCheckout(true);
   };
 
-  // MAIN FIX: create ONE order with order_items array and also populate legacy NOT NULL columns
   const handleSubmitOrder = async () => {
     if (!customerName.trim()) {
       toast.error("Nom requis");
@@ -99,8 +103,9 @@ const Panier = () => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
       const orderNumber = `CMD-${timestamp}-${random}`;
-
-      // Build order_items array (with personalization if present)
+      
+      const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+      
       const orderItems = await Promise.all(items.map(async (item) => {
         let personalizationData = null;
         if (item.customizable && item.id) {
@@ -132,7 +137,6 @@ const Panier = () => {
         };
       }));
 
-      // Use first item to populate legacy NOT NULL columns (fallbacks)
       const first = orderItems[0] || {};
       const legacyProductName = first.product_name || (items[0]?.name) || "Multiple items";
       const legacyUnitPrice = first.unit_price ?? (items[0]?.price) ?? finalTotal;
@@ -140,42 +144,44 @@ const Panier = () => {
       const legacySize = first.product_size || (items[0]?.size) || '';
       const legacyImage = first.product_image_url || (items[0]?.image) || '';
 
-      // Create a single order record containing all items
       const orderData: any = {
         order_number: orderNumber,
         customer_name: customerName.trim(),
         customer_phone: customerPhone.replace(/\s/g, ''),
         customer_address: customerAddress.trim() || '',
         customer_city: customerCity.trim() || '',
-        // legacy fields to satisfy NOT NULL constraints
         product_name: legacyProductName,
         product_price: legacyUnitPrice,
         product_category: legacyCategory,
         product_size: legacySize,
         product_image_url: legacyImage,
-        // new unified fields
         total_price: finalTotal,
         status: 'pending',
         notes: `Commande de ${items.length} article(s). ${promoCode ? `Code promo: ${promoCode}` : ''}`,
-        order_items: orderItems, // requires orders.order_items jsonb column
+        order_items: orderItems,
         preview_image_url: orderItems[0]?.preview_image_url || '',
         created_at: new Date().toISOString()
       };
 
-      // Insert single order
       const { data, error } = await supabase
         .from('orders')
         .insert([orderData])
         .select()
         .single();
 
-      if (error) throw error;
+   if (error) throw error;
 
-      toast.dismiss(loadingToast);
-      toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
-        duration: 5000,
-        description: `Total: ${finalTotal} DH${discount > 0 ? ` (Économie: ${discount} DH)` : ''}`
-      });
+// 💳 TRACKING: Achat complété (avec infos client)
+trackPurchase(orderNumber, items, finalTotal, {
+  phone: customerPhone,
+  email: '' // Tu peux ajouter l'email si tu le collectes
+});
+
+toast.dismiss(loadingToast);
+toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
+  duration: 5000,
+  description: `Total: ${finalTotal} DH${discount > 0 ? ` (Économie: ${discount} DH)` : ''}`
+});
 
       clearCart();
       setShowCheckout(false);
@@ -232,6 +238,8 @@ const Panier = () => {
     );
   }
 
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -239,8 +247,11 @@ const Panier = () => {
         <section className="gradient-primary py-16 text-white">
           <div className="container px-4">
             <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
-              Panier ({items.length} {items.length > 1 ? 'articles' : 'article'})
+              Panier ({totalQuantity} article{totalQuantity > 1 ? 's' : ''})
             </h1>
+            <p className="text-center text-lg">
+              {items.length} produit{items.length > 1 ? 's différents' : ''}
+            </p>
           </div>
         </section>
 
@@ -348,6 +359,10 @@ const Panier = () => {
                         <span className="text-muted-foreground">Sous-total</span>
                         <span className="font-semibold">{subtotal} DH</span>
                       </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Articles</span>
+                        <span>{totalQuantity} article{totalQuantity > 1 ? 's' : ''}</span>
+                      </div>
                       {discount > 0 && (
                         <div className="flex justify-between text-green-600">
                           <span>Réduction</span>
@@ -437,14 +452,24 @@ const Panier = () => {
                 />
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="font-semibold mb-3">Details</div>
-                <div className="space-y-2 text-sm text-gray-600">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border-2 border-blue-200">
+                <div className="font-semibold mb-3 flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  Détails de votre commande
+                </div>
+                <div className="space-y-2 text-sm text-gray-700">
                   {items.map((item, i) => (
-                    <div key={i}>• {item.name} × {item.quantity} = {item.price * item.quantity} DH</div>
+                    <div key={i} className="flex justify-between">
+                      <span>• {item.name} {item.size && `(${item.size})`}</span>
+                      <span className="font-semibold">× {item.quantity} = {item.price * item.quantity} DH</span>
+                    </div>
                   ))}
-                  <div className="pt-2 border-t font-semibold text-base text-green-600">
-                    Total: {finalTotal} DH
+                  <div className="pt-3 border-t-2 border-blue-300 font-bold text-base text-primary flex justify-between">
+                    <span>Total ({totalQuantity} articles):</span>
+                    <span>{finalTotal} DH</span>
+                  </div>
+                  <div className="text-xs text-gray-600 mt-2 bg-white/50 p-2 rounded">
+                    💡 Tous ces articles seront dans UNE SEULE commande avec UN SEUL numéro de suivi
                   </div>
                 </div>
               </div>

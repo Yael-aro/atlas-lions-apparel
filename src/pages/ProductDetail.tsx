@@ -12,6 +12,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/data/products";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { trackViewProduct, trackAddToCart, trackCustomizeProduct } from '@/hooks/useTracking';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -40,6 +41,17 @@ const ProductDetail = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+  // 👁️ TRACKING: Vue du produit
+useEffect(() => {
+  if (product) {
+    trackViewProduct({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      category: product.category
+    });
+  }
+}, [product]);
 
   if (!product) {
     return (
