@@ -24,7 +24,7 @@ const Panier = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneError, setPhoneError] = useState('');
 
-  const deliveryFee = customerCity ? (customerCity.toLowerCase().includes('casa') ? 20 : 40) : 0;
+  const deliveryFee = customerCity ? (customerCity.toLowerCase().includes('casa') ? 0 : 0) : 0;
   const subtotal = getTotalPrice();
   const finalTotal = Math.max(0, subtotal - discount + deliveryFee);
 
@@ -488,7 +488,7 @@ toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
                   disabled={!customerName || !customerPhone || isSubmitting}
                   className="flex-1"
                 >
-                  {isSubmitting ? '⏳ Envoi...' : '✅ Confirmer'}
+                  {isSubmitting ? '⏳ Envoi...' : ' Confirmer'}
                 </Button>
               </div>
             </div>

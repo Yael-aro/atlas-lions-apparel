@@ -1,8 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Star, ChevronLeft, ChevronRight, Eye } from "lucide-react";
-import { useCart } from "@/contexts/CartContext";
-import { toast } from "sonner";
+import { Star, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ColorVariant } from "@/data/products";
@@ -33,10 +31,8 @@ export const ProductCard = ({
   stock,
   customizable,
   hasColorVariants,
-  colorVariants,
-  availableSizes
+  colorVariants
 }: ProductCardProps) => {
-  const { addToCart } = useCart();
   
   const [selectedVariant, setSelectedVariant] = useState<ColorVariant | null>(
     hasColorVariants && colorVariants && colorVariants.length > 0 
@@ -45,10 +41,6 @@ export const ProductCard = ({
   );
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const [selectedSize, setSelectedSize] = useState<string>(
-    availableSizes && availableSizes.length > 0 ? availableSizes[0] : ""
-  );
 
   const displayImages = selectedVariant?.images || images || [image];
 
@@ -76,56 +68,10 @@ export const ProductCard = ({
     });
   };
 
-  const handleVariantChange = (variant: ColorVariant) => {
-    setSelectedVariant(variant);
-  };
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (availableSizes && availableSizes.length > 0 && !selectedSize) {
-      toast.error("Veuillez sélectionner une taille");
-      return;
-    }
-
-    let fullName = name;
-    if (selectedVariant) {
-      fullName = `${name} - ${selectedVariant.colorName}`;
-    }
-    if (selectedSize) {
-      fullName = `${fullName} - ${selectedSize}`;
-    }
-
-    const uniqueId = customizable 
-      ? id 
-      : `${id}-${selectedVariant?.colorName || 'default'}-${selectedSize || 'onesize'}`;
-
-    addToCart({
-      id: uniqueId,
-      name: fullName,
-      price,
-      image: currentImage,
-      category,
-      customizable: customizable || false,
-      size: selectedSize || undefined,
-      quantity: 1
-    });
-    
-    toast.success(`✅ ${fullName} ajouté au panier !`, {
-      duration: 3000,
-      description: `${price} DH`,
-      action: {
-        label: "Voir le panier",
-        onClick: () => window.location.href = "/panier"
-      }
-    });
-  };
-
   return (
     <Link to={`/produit/${id}`}>
-      <Card className="shadow-elegant hover:shadow-2xl transition-all duration-300 group animate-in fade-in cursor-pointer">
-        <CardContent className="p-0">
+      <Card className="shadow-elegant hover:shadow-2xl transition-all duration-300 group animate-in fade-in cursor-pointer h-full">
+        <CardContent className="p-0 h-full flex flex-col">
           <div className="relative overflow-hidden rounded-t-lg">
             <div className="relative w-full h-64">
               <img
@@ -205,8 +151,8 @@ export const ProductCard = ({
             )}
           </div>
           
-          <div className="p-6 space-y-4">
-            <div>
+          <div className="p-6 space-y-4 flex-1 flex flex-col">
+            <div className="flex-1">
               <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wide">
                 {category}
               </p>
@@ -219,81 +165,15 @@ export const ProductCard = ({
                 </p>
               )}
             </div>
-
-            {hasColorVariants && colorVariants && colorVariants.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">
-                  Couleur: <span className="text-primary">{selectedVariant?.colorName}</span>
-                </p>
-                <div className="flex gap-2">
-                  {colorVariants.map((variant) => (
-                    <button
-                      key={variant.colorName}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleVariantChange(variant);
-                      }}
-                      type="button"
-                      className={`w-10 h-10 rounded-full border-4 transition-all ${
-                        selectedVariant?.colorName === variant.colorName
-                          ? 'border-primary scale-110 shadow-lg'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      style={{ 
-                        backgroundColor: variant.color,
-                        boxShadow: variant.color === '#FFFFFF' ? 'inset 0 0 0 1px #e5e7eb' : 'none'
-                      }}
-                      title={variant.colorName}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {availableSizes && availableSizes.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">
-                  Taille: <span className="text-primary">{selectedSize}</span>
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {availableSizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedSize(size);
-                      }}
-                      type="button"
-                      className={`px-4 py-2 rounded-lg border-2 font-semibold transition-all ${
-                        selectedSize === size
-                          ? 'border-primary bg-primary text-white scale-105 shadow-lg'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
             
             <div className="flex items-center justify-between pt-2 border-t">
               <div>
                 <span className="text-3xl font-bold text-primary">{price}</span>
                 <span className="text-lg font-semibold text-muted-foreground ml-1">DH</span>
               </div>
-              <Button 
-                onClick={handleAddToCart} 
-                className="shadow-elegant hover:shadow-xl transition-all"
-                size="lg"
-                disabled={stock === 0}
-                type="button"
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                {stock === 0 ? 'Épuisé' : 'Ajouter'}
-              </Button>
+              {stock === 0 && (
+                <span className="text-red-600 font-bold">Épuisé</span>
+              )}
             </div>
           </div>
         </CardContent>

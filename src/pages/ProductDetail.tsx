@@ -135,7 +135,7 @@ useEffect(() => {
       quantity
     });
 
-    toast.success(`✅ ${fullName} ajouté au panier !`, {
+    toast.success(` ${fullName} ajouté au panier !`, {
       action: {
         label: "Voir le panier",
         onClick: () => navigate("/panier")

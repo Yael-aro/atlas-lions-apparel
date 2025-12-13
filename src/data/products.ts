@@ -67,7 +67,7 @@ export const products: Product[] = [
   {
   id: "1",
   name: "Maillot Maroc Premium",
-  price: 229,
+  price: 249,
   image: jerseyImage,
   images: [jerseyImage, backImage], // ✅ Images par défaut
   category: "Maillot",
@@ -99,7 +99,7 @@ export const products: Product[] = [
   {
   id: "2",
   name: "Pack Complet Supporter",
-  price: 319,
+  price: 349,
   image: MinatureImage,
   images: [
     MinatureImage,
@@ -179,18 +179,7 @@ export const products: Product[] = [
     featured: false,
     // ❌ PAS de availableSizes
   },
-  {
-    id: "5",
-    name: "Tarbouch traditionnel",
-    price: 69,
-    image: tarbouchImage,
-    category: "Accessoires",
-    description: "Casquette officielle Atlas Lions avec broderie",
-    stock: 100,
-    customizable: false,
-    featured: true,
-    // ❌ PAS de availableSizes
-  },
+,
 
   {
     id: "6",
@@ -204,33 +193,7 @@ export const products: Product[] = [
     featured: false,
     // ❌ PAS de availableSizes
   },
-    {
-    id: "7",
-    name: "Short Maroc Premium",
-    price: 90,
-    image: ShortImage,
-    category: "Short",
-    description: "Short officiel de l'équipe du Maroc",
-    stock: 60,
-    customizable: false,
-    featured: false,
-    availableSizes: ["S", "M", "L", "XL", "XXL"], // ✅ NOUVEAU
-    hasColorVariants: true,
-    colorVariants: [
-      {
-        color: "#C8102E",
-        colorName: "Rouge",
-        image: ShortImage,
-        images: [ShortImage],
-      },
-      {
-        color: "#FFFFFF",
-        colorName: "Blanc",
-        image: shortWhiteImage,
-        images: [shortWhiteImage],
-      },
-    ],
-  },
+
  
   
 ];
