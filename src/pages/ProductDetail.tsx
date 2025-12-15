@@ -108,7 +108,7 @@ useEffect(() => {
   };
 
   const handleWhatsAppContact = () => {
-    const phoneNumber = "212XXXXXXXXX"; // Remplacez par votre numéro WhatsApp au format international (sans + ni espaces)
+    const phoneNumber = "212770257750"; // Remplacez par votre numéro WhatsApp au format international (sans + ni espaces)
     let message = `Bonjour! Je suis intéressé(e) par le produit: ${product.name}`;
     
     if (selectedColor) message += `\nCouleur: ${selectedColor}`;
