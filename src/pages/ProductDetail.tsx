@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import {
   ShoppingCart, Heart, Share2, Star, Check, Sparkles,
-  Package, ArrowLeft, Plus, Minus, ChevronLeft, ChevronRight
+  Package, ArrowLeft, Plus, Minus, ChevronLeft, ChevronRight, MessageCircle
 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/data/products";
@@ -105,6 +105,20 @@ useEffect(() => {
     } catch (err) {
       console.log("Erreur partage:", err);
     }
+  };
+
+  const handleWhatsAppContact = () => {
+    const phoneNumber = "212XXXXXXXXX"; // Remplacez par votre numéro WhatsApp au format international (sans + ni espaces)
+    let message = `Bonjour! Je suis intéressé(e) par le produit: ${product.name}`;
+    
+    if (selectedColor) message += `\nCouleur: ${selectedColor}`;
+    if (selectedSize) message += `\nTaille: ${selectedSize}`;
+    message += `\nQuantité: ${quantity}`;
+    message += `\nPrix: ${product.price} DH`;
+    message += `\n\nLien: ${window.location.href}`;
+    
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleAddToCart = () => {
@@ -245,6 +259,8 @@ useEffect(() => {
 
                   <div className="flex items-baseline gap-4">
                     <span className="text-4xl font-bold text-primary">{product.price} DH</span>
+                    <span className="text-2xl font-semibold text-gray-400 line-through">{Math.round(product.price * 1.4)} DH</span>
+                    <Badge variant="destructive" className="text-lg px-3 py-1">-40%</Badge>
                   </div>
 
                   {product.stock !== undefined && (
@@ -366,6 +382,17 @@ useEffect(() => {
                       </Button>
                     </Link>
                   )}
+
+                  {/* Bouton WhatsApp */}
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={handleWhatsAppContact}
+                    className="w-full h-14 text-lg font-bold border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                  >
+                    <MessageCircle className="mr-2 h-6 w-6" />
+                    Contacter via WhatsApp
+                  </Button>
 
                   <button
                     onClick={handleShare}
