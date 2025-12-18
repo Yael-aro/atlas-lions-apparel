@@ -1,30 +1,19 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowLeft, 
   Save, 
   ShoppingCart, 
-  Palette, 
-  Type, 
-  MapPin, 
-  Ruler, 
-  Edit3, 
-  Hash, 
-  MessageSquare, 
-  Coins,
-  ClipboardList,
   CheckCircle,
   Loader2,
-  Info
+  ChevronDown,
+  ChevronUp,
+  X
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -69,17 +58,22 @@ const Personnalisation = () => {
   const [phoneError, setPhoneError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [showOrderModal, setShowOrderModal] = useState(false);
+
+  const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
+    base: true,
+    text: false,
+    style: false,
+    order: false
+  });
+
   const availableSizes = ["S", "M", "L", "XL", "XXL"];
 
   const fonts = [
-    { value: "montserrat", label: "Montserrat", style: "font-sans" },
-    { value: "roboto", label: "Roboto", style: "font-sans" },
-    { value: "playfair", label: "Playfair Display", style: "font-serif" },
-    { value: "inter", label: "Inter", style: "font-sans" },
-    { value: "lora", label: "Lora", style: "font-serif" },
-    { value: "opensans", label: "Open Sans", style: "font-sans" },
-    { value: "raleway", label: "Raleway", style: "font-sans" },
-    { value: "poppins", label: "Poppins", style: "font-sans" },
+    { value: "montserrat", label: "Montserrat" },
+    { value: "roboto", label: "Roboto" },
+    { value: "inter", label: "Inter" },
+    { value: "poppins", label: "Poppins" },
   ];
 
   const colors = [
@@ -96,6 +90,10 @@ const Personnalisation = () => {
   const currentJerseyImage = selectedPosition === "back" 
     ? jerseyImages[jerseyColor].back 
     : jerseyImages[jerseyColor].front;
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const validatePhone = (phone: string) => {
     const phoneRegex = /^(06|07|05)\d{8}$/;
@@ -195,6 +193,12 @@ const Personnalisation = () => {
   };
 
   const handleSaveCustomization = async () => {
+    // Si déjà enregistré, ouvrir directement le modal
+    if (isSaved) {
+      setShowOrderModal(true);
+      return;
+    }
+
     if (!textEnabled && !numberEnabled && !sloganEnabled) {
       toast.error("Activez au moins une personnalisation");
       return;
@@ -225,6 +229,7 @@ const Personnalisation = () => {
 
     localStorage.setItem("personalization-1", JSON.stringify(customizationData));
     setIsSaved(true);
+    setShowOrderModal(true); // Ouvrir le modal au lieu de l'accordéon
     toast.success("Personnalisation enregistrée !", {
       description: "Remplissez vos coordonnées pour commander",
       icon: <CheckCircle className="h-4 w-4" />
@@ -247,9 +252,7 @@ const Personnalisation = () => {
     }
 
     setIsSubmitting(true);
-    const loadingToast = toast.loading('Enregistrement de votre commande...', {
-      icon: <Loader2 className="h-4 w-4 animate-spin" />
-    });
+    const loadingToast = toast.loading('Enregistrement de votre commande...');
 
     try {
       const timestamp = Date.now();
@@ -321,12 +324,9 @@ const Personnalisation = () => {
       });
 
       localStorage.removeItem("personalization-1");
+      setShowOrderModal(false);
 
       setTimeout(() => {
-        toast.info("Confirmation par téléphone sous 24h", { 
-          duration: 5000,
-          icon: <Info className="h-4 w-4" />
-        });
         navigate('/');
       }, 1500);
 
@@ -390,322 +390,476 @@ const Personnalisation = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#2b2b2b]">
       <Header />
       
-      <main className="flex-1 py-8 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container px-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" onClick={() => navigate("/boutique")} className="gap-2">
+      {/* Barre d'outils supérieure */}
+      <div className="bg-[#1e1e1e] border-b border-gray-700 px-3 lg:px-4 py-2 lg:py-3">
+        <div className="container max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <button 
+              onClick={() => navigate("/boutique")} 
+              className="flex items-center gap-1 lg:gap-2 text-gray-300 hover:text-white transition-colors"
+            >
               <ArrowLeft className="h-4 w-4" />
-              Retour à la boutique
-            </Button>
-            <h1 className="text-3xl md:text-4xl font-bold">Personnalisez votre maillot</h1>
+              <span className="text-xs lg:text-sm font-medium hidden sm:inline">Retour</span>
+            </button>
+            <div className="h-6 w-px bg-gray-600 hidden sm:block"></div>
+            <h1 className="text-sm lg:text-lg font-semibold text-white">Personnalisation</h1>
           </div>
+          
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="text-right">
+              <div className="text-[10px] lg:text-xs text-gray-400">Total</div>
+              <div className="text-sm lg:text-lg font-bold text-primary">
+                {sloganEnabled && customSlogan.trim() ? 349 : 249} DH
+              </div>
+            </div>
+            {/* Bouton desktop */}
+            <button
+              onClick={handleSaveCustomization}
+              className={`hidden lg:flex px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg font-medium text-xs lg:text-sm items-center gap-1 lg:gap-2 transition-all ${
+                isSaved
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-primary text-white hover:bg-primary/90'
+              }`}
+            >
+              {isSaved ? (
+                <>
+                  <ShoppingCart className="h-3 lg:h-4 w-3 lg:w-4" />
+                  <span>Commander</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-3 lg:h-4 w-3 lg:w-4" />
+                  <span>Enregistrer</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="shadow-2xl">
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <Palette className="h-6 w-6 text-primary" />
-                  Aperçu en temps réel
-                </h2>
-
-                <div 
-                  ref={previewRef}
-                  className="relative w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden shadow-inner"
-                  style={{ touchAction: 'none' }}
-                >
-                  <img 
-                    src={currentJerseyImage}
-                    alt={`Maillot ${jerseyColor}`}
-                    className="w-full h-full object-contain"
-                  />
-
-                  {textEnabled && customText && (
-                    <div
-                      onMouseDown={handleMouseDown("text")}
-                      onTouchStart={handleTouchStart("text")}
-                      className={`absolute ${getFontClass(selectedFont)} font-bold text-4xl md:text-5xl cursor-move select-none`}
-                      style={{
-                        left: `${textPosition.x}%`,
-                        top: `${textPosition.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                        color: getColorValue(selectedColor),
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                        WebkitTextStroke: '1px rgba(0,0,0,0.5)',
-                      }}
-                    >
-                      {customText}
-                    </div>
-                  )}
-
-                  {numberEnabled && customNumber && (
-                    <div
-                      onMouseDown={handleMouseDown("number")}
-                      onTouchStart={handleTouchStart("number")}
-                      className={`absolute ${getFontClass(selectedFont)} font-bold text-6xl md:text-7xl cursor-move select-none`}
-                      style={{
-                        left: `${numberPosition.x}%`,
-                        top: `${numberPosition.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                        color: getColorValue(selectedColor),
-                        textShadow: '3px 3px 6px rgba(0,0,0,0.8)',
-                        WebkitTextStroke: '1.5px rgba(0,0,0,0.5)',
-                      }}
-                    >
-                      {customNumber}
-                    </div>
-                  )}
-
-                  {sloganEnabled && customSlogan && (
-                    <div
-                      onMouseDown={handleMouseDown("slogan")}
-                      onTouchStart={handleTouchStart("slogan")}
-                      className={`absolute ${getFontClass(selectedFont)} font-semibold text-2xl md:text-3xl cursor-move select-none`}
-                      style={{
-                        left: `${sloganPosition.x}%`,
-                        top: `${sloganPosition.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                        color: getColorValue(selectedColor),
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                        WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
-                      }}
-                    >
-                      {customSlogan}
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-sm text-muted-foreground mt-4 text-center flex items-center justify-center gap-1">
-                  <Info className="h-4 w-4" />
-                  {window.innerWidth > 768 
-                    ? "Glissez les éléments pour les déplacer • Molette pour zoomer" 
-                    : "Glissez les éléments pour les déplacer"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-              <Card className="shadow-lg">
-                <CardContent className="p-6 space-y-6">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Panneau latéral */}
+        <div className="w-full lg:w-80 bg-[#252525] border-b lg:border-r lg:border-b-0 border-gray-700 overflow-y-auto max-h-[40vh] lg:max-h-none pb-20 lg:pb-0">
+          <div className="p-3 lg:p-4 space-y-2">
+            
+            {/* Section: Configuration de base */}
+            <div className="bg-[#1e1e1e] rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleSection('base')}
+                className="w-full flex items-center justify-between px-3 lg:px-4 py-2.5 lg:py-3 text-white hover:bg-[#2b2b2b] transition-colors"
+              >
+                <span className="font-medium text-xs lg:text-sm">Configuration de base</span>
+                {openSections.base ? <ChevronUp className="h-3 lg:h-4 w-3 lg:w-4" /> : <ChevronDown className="h-3 lg:h-4 w-3 lg:w-4" />}
+              </button>
+              
+              {openSections.base && (
+                <div className="p-3 lg:p-4 space-y-3 lg:space-y-4 border-t border-gray-700">
                   <div>
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Palette className="h-5 w-5" />
-                      Couleur du maillot
-                    </h3>
-                    <RadioGroup value={jerseyColor} onValueChange={(value: "red" | "white") => {setJerseyColor(value); setIsSaved(false);}}>
-                      <div className="grid grid-cols-2 gap-4">
-                        <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${jerseyColor === "red" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
-                          <RadioGroupItem value="red" />
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-[#C8102E] border-2 border-gray-300"></div>
-                            <span className="font-semibold">Rouge</span>
-                          </div>
-                        </label>
-                        <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${jerseyColor === "white" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
-                          <RadioGroupItem value="white" />
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-white border-2 border-gray-300"></div>
-                            <span className="font-semibold">Blanc</span>
-                          </div>
-                        </label>
-                      </div>
-                    </RadioGroup>
+                    <Label className="text-xs text-gray-400 mb-2 block">COULEUR</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {setJerseyColor("red"); setIsSaved(false);}}
+                        className={`py-2 px-3 rounded text-sm font-medium transition-all ${
+                          jerseyColor === "red"
+                            ? 'bg-primary text-white'
+                            : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#333]'
+                        }`}
+                      >
+                        Rouge
+                      </button>
+                      <button
+                        onClick={() => {setJerseyColor("white"); setIsSaved(false);}}
+                        className={`py-2 px-3 rounded text-sm font-medium transition-all ${
+                          jerseyColor === "white"
+                            ? 'bg-primary text-white'
+                            : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#333]'
+                        }`}
+                      >
+                        Blanc
+                      </button>
+                    </div>
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Ruler className="h-5 w-5" />
-                      Taille du maillot
-                    </h3>
-                    <div className="grid grid-cols-5 gap-2">
+                    <Label className="text-xs text-gray-400 mb-2 block">TAILLE</Label>
+                    <div className="grid grid-cols-5 gap-1.5">
                       {availableSizes.map((size) => (
                         <button
                           key={size}
                           onClick={() => {setSelectedSize(size); setIsSaved(false);}}
-                          className={`px-4 py-3 rounded-lg border-2 font-bold transition-all ${
+                          className={`py-2 rounded text-sm font-semibold transition-all ${
                             selectedSize === size
-                              ? 'border-primary bg-primary text-white scale-105 shadow-lg'
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              ? 'bg-primary text-white'
+                              : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#333]'
                           }`}
                         >
                           {size}
                         </button>
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Taille sélectionnée : <span className="font-bold text-primary">{selectedSize}</span>
-                    </p>
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      Position
-                    </h3>
-                    <RadioGroup value={selectedPosition} onValueChange={(value: "back" | "chest" | "sleeve") => {setSelectedPosition(value); setIsSaved(false);}}>
-                      <div className="grid grid-cols-3 gap-4">
-                        {[
-                          { value: "back", label: "Dos", icon: <MapPin className="h-5 w-5" /> },
-                          { value: "chest", label: "Poitrine", icon: <MapPin className="h-5 w-5" /> },
-                          { value: "sleeve", label: "Manche", icon: <MapPin className="h-5 w-5" /> },
-                        ].map((pos) => (
-                          <label key={pos.value} className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedPosition === pos.value ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
-                            <RadioGroupItem value={pos.value} />
-                            {pos.icon}
-                            <span className="font-semibold text-sm">{pos.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div className="space-y-4 border-t pt-6">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="text-toggle" className="text-lg font-bold flex items-center gap-2">
-                        <Edit3 className="h-5 w-5" />
-                        Nom
-                      </Label>
-                      <input type="checkbox" id="text-toggle" checked={textEnabled} onChange={(e) => {setTextEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
-                    </div>
-                    {textEnabled && (
-                      <Input value={customText} onChange={(e) => {setCustomText(e.target.value.slice(0, 15)); setIsSaved(false);}} placeholder="Ex: ZIYECH" maxLength={15} className="text-lg" />
-                    )}
-                  </div>
-
-                  <div className="space-y-4 border-t pt-6">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="number-toggle" className="text-lg font-bold flex items-center gap-2">
-                        <Hash className="h-5 w-5" />
-                        Numéro
-                      </Label>
-                      <input type="checkbox" id="number-toggle" checked={numberEnabled} onChange={(e) => {setNumberEnabled(e.target.checked); setIsSaved(false);}} className="w-5 h-5" />
-                    </div>
-                    {numberEnabled && (
-                      <Input type="number" min="1" max="99" value={customNumber} onChange={(e) => {const val = e.target.value; if (!val || (parseInt(val) >= 1 && parseInt(val) <= 99)) {setCustomNumber(val); setIsSaved(false);}}} placeholder="Ex: 7" className="text-lg" />
-                    )}
-                  </div>
-
-                 
-
-                  <div className="space-y-4 border-t pt-6">
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                      <Type className="h-5 w-5" />
-                      Police d'écriture
-                    </h3>
-                    <RadioGroup value={selectedFont} onValueChange={(value) => {setSelectedFont(value); setIsSaved(false);}}>
-                      <div className="grid grid-cols-2 gap-3">
-                        {fonts.map((font) => (
-                          <label key={font.value} className={`flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${selectedFont === font.value ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"}`}>
-                            <RadioGroupItem value={font.value} />
-                            <span className={`${font.style} font-semibold`}>{font.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div className="space-y-4 border-t pt-6">
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                      <Palette className="h-5 w-5" />
-                      Couleur du texte
-                    </h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {colors.map((color) => (
+                    <Label className="text-xs text-gray-400 mb-2 block">POSITION</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "back", label: "Dos" },
+                        { value: "chest", label: "Poitrine" },
+                        { value: "sleeve", label: "Manche" }
+                      ].map((pos) => (
                         <button
-                          key={color.value}
-                          onClick={() => {setSelectedColor(color.value); setIsSaved(false);}}
-                          className={`flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-all ${selectedColor === color.value ? "border-primary scale-105 shadow-lg" : "border-gray-200 hover:border-gray-300"}`}
+                          key={pos.value}
+                          onClick={() => {setSelectedPosition(pos.value as any); setIsSaved(false);}}
+                          className={`py-2 rounded text-xs font-medium transition-all ${
+                            selectedPosition === pos.value
+                              ? 'bg-primary text-white'
+                              : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#333]'
+                          }`}
                         >
-                          <div className="w-12 h-12 rounded-full border-2 border-gray-300" style={{ backgroundColor: color.color, boxShadow: color.value === 'white' ? 'inset 0 0 0 1px #e5e7eb' : 'none' }}></div>
-                          <span className="text-sm font-semibold">{color.label}</span>
+                          {pos.label}
                         </button>
                       ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              )}
+            </div>
 
-              <Card className="shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5">
-                <CardContent className="p-6">
-                  <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                    <Coins className="h-6 w-6" />
-                    Récapitulatif
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-lg">
-                      <span>Maillot personnalisé</span>
-                      <span className="font-bold">249 DH</span>
+            {/* Section: Texte et numéro */}
+            <div className="bg-[#1e1e1e] rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleSection('text')}
+                className="w-full flex items-center justify-between px-3 lg:px-4 py-2.5 lg:py-3 text-white hover:bg-[#2b2b2b] transition-colors"
+              >
+                <span className="font-medium text-xs lg:text-sm">Texte & Numéro</span>
+                {openSections.text ? <ChevronUp className="h-3 lg:h-4 w-3 lg:w-4" /> : <ChevronDown className="h-3 lg:h-4 w-3 lg:w-4" />}
+              </button>
+              
+              {openSections.text && (
+                <div className="p-3 lg:p-4 space-y-3 lg:space-y-4 border-t border-gray-700">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-xs text-gray-400">NOM</Label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={textEnabled} 
+                          onChange={(e) => {setTextEnabled(e.target.checked); setIsSaved(false);}}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-gray-600 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                      </label>
                     </div>
-                    {sloganEnabled && customSlogan.trim() && (
-                      <div className="flex justify-between text-lg text-green-600">
-                        <span>Slogan personnalisé</span>
-                        <span className="font-bold">+50 DH</span>
-                      </div>
+                    {textEnabled && (
+                      <Input 
+                        value={customText} 
+                        onChange={(e) => {setCustomText(e.target.value.slice(0, 15)); setIsSaved(false);}} 
+                        placeholder="Ex: ZIYECH" 
+                        maxLength={15}
+                        className="bg-[#2b2b2b] border-gray-600 text-white placeholder:text-gray-500"
+                      />
                     )}
-                    <div className="border-t-2 pt-3 flex justify-between text-2xl font-bold text-primary">
-                      <span>Total</span>
-                      <span>{sloganEnabled && customSlogan.trim() ? 349 : 249} DH</span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-xs text-gray-400">NUMÉRO</Label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={numberEnabled} 
+                          onChange={(e) => {setNumberEnabled(e.target.checked); setIsSaved(false);}}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-gray-600 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                      </label>
+                    </div>
+                    {numberEnabled && (
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        max="99" 
+                        value={customNumber} 
+                        onChange={(e) => {
+                          const val = e.target.value; 
+                          if (!val || (parseInt(val) >= 1 && parseInt(val) <= 99)) {
+                            setCustomNumber(val); 
+                            setIsSaved(false);
+                          }
+                        }} 
+                        placeholder="Ex: 7"
+                        className="bg-[#2b2b2b] border-gray-600 text-white placeholder:text-gray-500"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Section: Style */}
+            <div className="bg-[#1e1e1e] rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleSection('style')}
+                className="w-full flex items-center justify-between px-3 lg:px-4 py-2.5 lg:py-3 text-white hover:bg-[#2b2b2b] transition-colors"
+              >
+                <span className="font-medium text-xs lg:text-sm">Style</span>
+                {openSections.style ? <ChevronUp className="h-3 lg:h-4 w-3 lg:w-4" /> : <ChevronDown className="h-3 lg:h-4 w-3 lg:w-4" />}
+              </button>
+              
+              {openSections.style && (
+                <div className="p-3 lg:p-4 space-y-3 lg:space-y-4 border-t border-gray-700">
+                  <div>
+                    <Label className="text-xs text-gray-400 mb-2 block">POLICE</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {fonts.map((font) => (
+                        <button
+                          key={font.value}
+                          onClick={() => {setSelectedFont(font.value); setIsSaved(false);}}
+                          className={`py-2 px-2 rounded text-xs font-medium transition-all ${
+                            selectedFont === font.value
+                              ? 'bg-primary text-white'
+                              : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#333]'
+                          }`}
+                        >
+                          {font.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  <Button onClick={handleSaveCustomization} disabled={isSaved} size="lg" className="w-full mt-6 shadow-lg gap-2">
-                    <Save className="h-5 w-5" />
-                    {isSaved ? "Enregistré" : "Enregistrer ma personnalisation"}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {isSaved && (
-                <Card className="shadow-lg border-2 border-primary animate-in fade-in slide-in-from-bottom">
-                  <CardContent className="p-6 space-y-4">
-                    <h3 className="text-2xl font-bold flex items-center gap-2">
-                      <ClipboardList className="h-6 w-6" />
-                      Vos coordonnées
-                    </h3>
-                    
-                    <div>
-                      <Label>Nom complet *</Label>
-                      <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Votre nom" className="mt-2" />
+                  <div>
+                    <Label className="text-xs text-gray-400 mb-2 block">COULEUR TEXTE</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {colors.map((color) => (
+                        <button
+                          key={color.value}
+                          onClick={() => {setSelectedColor(color.value); setIsSaved(false);}}
+                          className={`py-2 rounded text-xs font-medium transition-all ${
+                            selectedColor === color.value
+                              ? 'bg-primary text-white'
+                              : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#333]'
+                          }`}
+                        >
+                          {color.label}
+                        </button>
+                      ))}
                     </div>
-
-                    <div>
-                      <Label>Téléphone *</Label>
-                      <Input type="tel" value={customerPhone} onChange={(e) => {setCustomerPhone(e.target.value); if (phoneError) validatePhone(e.target.value);}} placeholder="Votre numéro de téléphone" className={`mt-2 ${phoneError ? 'border-red-500' : ''}`} />
-                      {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
-                    </div>
-
-                    <div>
-                      <Label>Ville</Label>
-                      <Input value={customerCity} onChange={(e) => setCustomerCity(e.target.value)} placeholder="Votre ville" className="mt-2" />
-                    </div>
-
-                    <div>
-                      <Label>Adresse</Label>
-                      <Textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Votre adresse" rows={2} className="mt-2 resize-none" />
-                    </div>
-
-                    <Button onClick={submitOrder} disabled={!customerName || !customerPhone || isSubmitting} size="lg" className="w-full shadow-lg gap-2">
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Envoi en cours...
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="h-5 w-5" />
-                          Commander maintenant
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               )}
             </div>
+
+          </div>
+        </div>
+
+        {/* Zone d'aperçu principale */}
+        <div className="flex-1 flex items-center justify-center p-4 lg:p-8 pb-24 lg:pb-8 overflow-auto bg-[#2b2b2b]">
+          <div className="w-full max-w-2xl">
+            <div 
+              ref={previewRef}
+              className="relative w-full aspect-square bg-[#1e1e1e] rounded-lg overflow-hidden border border-gray-700"
+              style={{ touchAction: 'none' }}
+            >
+              <img 
+                src={currentJerseyImage}
+                alt={`Maillot ${jerseyColor}`}
+                className="w-full h-full object-contain"
+              />
+
+              {textEnabled && customText && (
+                <div
+                  onMouseDown={handleMouseDown("text")}
+                  onTouchStart={handleTouchStart("text")}
+                  className={`absolute ${getFontClass(selectedFont)} font-bold text-3xl sm:text-4xl md:text-5xl cursor-move select-none`}
+                  style={{
+                    left: `${textPosition.x}%`,
+                    top: `${textPosition.y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    color: getColorValue(selectedColor),
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                    WebkitTextStroke: '1px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {customText}
+                </div>
+              )}
+
+              {numberEnabled && customNumber && (
+                <div
+                  onMouseDown={handleMouseDown("number")}
+                  onTouchStart={handleTouchStart("number")}
+                  className={`absolute ${getFontClass(selectedFont)} font-bold text-5xl sm:text-6xl md:text-7xl cursor-move select-none`}
+                  style={{
+                    left: `${numberPosition.x}%`,
+                    top: `${numberPosition.y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    color: getColorValue(selectedColor),
+                    textShadow: '3px 3px 6px rgba(0,0,0,0.8)',
+                    WebkitTextStroke: '1.5px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {customNumber}
+                </div>
+              )}
+
+              {sloganEnabled && customSlogan && (
+                <div
+                  onMouseDown={handleMouseDown("slogan")}
+                  onTouchStart={handleTouchStart("slogan")}
+                  className={`absolute ${getFontClass(selectedFont)} font-semibold text-xl sm:text-2xl md:text-3xl cursor-move select-none`}
+                  style={{
+                    left: `${sloganPosition.x}%`,
+                    top: `${sloganPosition.y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    color: getColorValue(selectedColor),
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                    WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {customSlogan}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-3 lg:mt-4 text-center">
+              Glissez les éléments pour les repositionner
+            </p>
           </div>
         </div>
       </main>
+
+      {/* Modal de commande */}
+      {showOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#1e1e1e] rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-700 shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-[#1e1e1e]">
+              <h3 className="text-lg font-semibold text-white">Finaliser la commande</h3>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-4">
+              {/* Récap */}
+              <div className="bg-[#252525] rounded-lg p-4 border border-gray-700">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-400">Maillot personnalisé</span>
+                  <span className="text-white font-semibold">249 DH</span>
+                </div>
+                {sloganEnabled && customSlogan.trim() && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Slogan personnalisé</span>
+                    <span className="text-green-400 font-semibold">+50 DH</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-700">
+                  <span className="text-base font-semibold text-white">Total</span>
+                  <span className="text-xl font-bold text-primary">
+                    {sloganEnabled && customSlogan.trim() ? 349 : 249} DH
+                  </span>
+                </div>
+              </div>
+
+              {/* Formulaire */}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-gray-400 mb-1.5 block">NOM COMPLET *</Label>
+                  <Input 
+                    value={customerName} 
+                    onChange={(e) => setCustomerName(e.target.value)} 
+                    placeholder="Votre nom"
+                    className="bg-[#2b2b2b] border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs text-gray-400 mb-1.5 block">TÉLÉPHONE *</Label>
+                  <Input 
+                    type="tel" 
+                    value={customerPhone} 
+                    onChange={(e) => {
+                      setCustomerPhone(e.target.value); 
+                      if (phoneError) validatePhone(e.target.value);
+                    }} 
+                    placeholder="06XXXXXXXX"
+                    className={`bg-[#2b2b2b] border-gray-600 text-white placeholder:text-gray-500 ${phoneError ? 'border-red-500' : ''}`}
+                  />
+                  {phoneError && <p className="text-red-400 text-xs mt-1">{phoneError}</p>}
+                </div>
+
+                <div>
+                  <Label className="text-xs text-gray-400 mb-1.5 block">VILLE</Label>
+                  <Input 
+                    value={customerCity} 
+                    onChange={(e) => setCustomerCity(e.target.value)} 
+                    placeholder="Votre ville"
+                    className="bg-[#2b2b2b] border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs text-gray-400 mb-1.5 block">ADRESSE</Label>
+                  <Textarea 
+                    value={customerAddress} 
+                    onChange={(e) => setCustomerAddress(e.target.value)} 
+                    placeholder="Votre adresse" 
+                    rows={2}
+                    className="bg-[#2b2b2b] border-gray-600 text-white placeholder:text-gray-500 resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Bouton commander */}
+              <button
+                onClick={submitOrder}
+                disabled={!customerName || !customerPhone || isSubmitting}
+                className="w-full py-3 bg-primary text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-5 w-5" />
+                    Commander maintenant
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bouton flottant mobile pour enregistrer */}
+      <button
+        onClick={handleSaveCustomization}
+        className={`lg:hidden fixed bottom-6 right-6 z-40 p-4 rounded-full shadow-2xl flex items-center gap-2 font-semibold transition-all ${
+          isSaved
+            ? 'bg-green-600 text-white hover:bg-green-700'
+            : 'bg-primary text-white hover:bg-primary/90 active:scale-95'
+        }`}
+      >
+        {isSaved ? (
+          <>
+            <ShoppingCart className="h-5 w-5" />
+            <span className="text-sm">Commander</span>
+          </>
+        ) : (
+          <>
+            <Save className="h-5 w-5" />
+            <span className="text-sm">Enregistrer</span>
+          </>
+        )}
+      </button>
 
       <Footer />
     </div>

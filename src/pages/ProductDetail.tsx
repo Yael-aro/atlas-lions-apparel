@@ -108,7 +108,7 @@ useEffect(() => {
   };
 
   const handleWhatsAppContact = () => {
-    const phoneNumber = "212770257750"; // Remplacez par votre numéro WhatsApp au format international (sans + ni espaces)
+    const phoneNumber = "212770257750";
     let message = `Bonjour! Je suis intéressé(e) par le produit: ${product.name}`;
     
     if (selectedColor) message += `\nCouleur: ${selectedColor}`;
@@ -187,8 +187,12 @@ useEffect(() => {
 
               <div className="space-y-4">
                 <Card className="overflow-hidden border-2 border-gray-200 shadow-2xl rounded-2xl">
-                  <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100">
-                    <img src={currentImage} alt={product.name} className="w-full h-full object-cover" />
+                  <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden group cursor-zoom-in">
+                    <img 
+                      src={currentImage} 
+                      alt={product.name} 
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-125" 
+                    />
 
                     {isOutOfStock && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -201,20 +205,20 @@ useEffect(() => {
                         setIsFavorite(!isFavorite);
                         toast.success(isFavorite ? "Retiré des favoris" : "Ajouté aux favoris");
                       }}
-                      className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all transform hover:scale-110"
+                      className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all transform hover:scale-110 z-10"
                     >
                       <Heart className={`h-6 w-6 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
                     </button>
 
                     {displayImages.length > 1 && (
                       <>
-                        <button onClick={handlePrevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all">
+                        <button onClick={handlePrevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10">
                           <ChevronLeft className="h-6 w-6" />
                         </button>
-                        <button onClick={handleNextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all">
+                        <button onClick={handleNextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10">
                           <ChevronRight className="h-6 w-6" />
                         </button>
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                           {displayImages.map((_, index) => (
                             <button
                               key={index}
@@ -234,9 +238,13 @@ useEffect(() => {
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${index === currentImageIndex ? 'border-primary shadow-lg' : 'border-gray-200 hover:border-gray-300'}`}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all group ${index === currentImageIndex ? 'border-primary shadow-lg' : 'border-gray-200 hover:border-gray-300'}`}
                       >
-                        <img src={img} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                        <img 
+                          src={img} 
+                          alt={`${product.name} ${index + 1}`} 
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
+                        />
                       </button>
                     ))}
                   </div>

@@ -178,7 +178,7 @@ trackPurchase(orderNumber, items, finalTotal, {
 });
 
 toast.dismiss(loadingToast);
-toast.success(`✅ Commande ${orderNumber} enregistrée !`, {
+toast.success(`Commande ${orderNumber} enregistrée !`, {
   duration: 5000,
   description: `Total: ${finalTotal} DH${discount > 0 ? ` (Économie: ${discount} DH)` : ''}`
 });
