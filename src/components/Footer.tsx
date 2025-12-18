@@ -23,7 +23,7 @@ export const Footer = () => {
             </p>
 
             <div className="flex space-x-4">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-smooth">
+              <a href="https://www.facebook.com/profile.php?id=61584553213442&locale=fr_FR" className="text-muted-foreground hover:text-primary transition-smooth">
                 <Facebook className="h-5 w-5" />
               </a>
               <a href="https://www.instagram.com/atlasllions?igsh=c3BxdmZrMHl5OTc=" className="text-muted-foreground hover:text-primary transition-smooth">
