@@ -41,17 +41,18 @@ const ProductDetail = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+  
   // 👁️ TRACKING: Vue du produit
-useEffect(() => {
-  if (product) {
-    trackViewProduct({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      category: product.category
-    });
-  }
-}, [product]);
+  useEffect(() => {
+    if (product) {
+      trackViewProduct({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        category: product.category
+      });
+    }
+  }, [product]);
 
   if (!product) {
     return (
@@ -205,18 +206,18 @@ useEffect(() => {
                         setIsFavorite(!isFavorite);
                         toast.success(isFavorite ? "Retiré des favoris" : "Ajouté aux favoris");
                       }}
-                      className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all transform hover:scale-110 z-10"
+                      className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all transform hover:scale-110 z-10"
                     >
-                      <Heart className={`h-6 w-6 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
+                      <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
                     </button>
 
                     {displayImages.length > 1 && (
                       <>
-                        <button onClick={handlePrevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10">
-                          <ChevronLeft className="h-6 w-6" />
+                        <button onClick={handlePrevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10">
+                          <ChevronLeft className="h-5 w-5" />
                         </button>
-                        <button onClick={handleNextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10">
-                          <ChevronRight className="h-6 w-6" />
+                        <button onClick={handleNextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10">
+                          <ChevronRight className="h-5 w-5" />
                         </button>
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                           {displayImages.map((_, index) => (
@@ -251,31 +252,31 @@ useEffect(() => {
                 )}
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div>
                   <Badge className="mb-3">{product.category}</Badge>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{product.name}</h1>
 
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                        <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
-                    <span className="text-gray-600">(127 avis)</span>
+                    <span className="text-sm text-gray-600">(127 avis)</span>
                   </div>
 
-                  <div className="flex items-baseline gap-4">
+                  <div className="flex items-baseline gap-3 mb-3">
                     <span className="text-4xl font-bold text-primary">{product.price} DH</span>
-                    <span className="text-2xl font-semibold text-gray-400 line-through">{Math.round(product.price * 1.4)} DH</span>
-                    <Badge variant="destructive" className="text-lg px-3 py-1">-40%</Badge>
+                    <span className="text-xl font-semibold text-gray-400 line-through">{Math.round(product.price * 1.4)} DH</span>
+                    <Badge variant="destructive" className="text-sm px-2 py-0.5">-40%</Badge>
                   </div>
 
                   {product.stock !== undefined && (
-                    <div className="mt-4">
+                    <div className="mt-3">
                       {product.stock > 0 ? (
                         <Badge variant="outline" className="border-green-500 text-green-700">
-                          <Check className="h-4 w-4 mr-1" />
+                          <Check className="h-3 w-3 mr-1" />
                           En stock ({product.stock} disponibles)
                         </Badge>
                       ) : (
@@ -287,17 +288,17 @@ useEffect(() => {
 
                 {product.description && (
                   <Card className="border-2 border-gray-200 bg-gradient-to-br from-blue-50 to-white">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-3">Description</h3>
-                      <p className="text-gray-700">{product.description}</p>
+                    <CardContent className="p-4">
+                      <h3 className="text-sm font-bold text-gray-900 mb-2">Description</h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
                     </CardContent>
                   </Card>
                 )}
 
                 {product.hasColorVariants && product.colorVariants && product.colorVariants.length > 0 && (
                   <div>
-                    <label className="text-lg font-bold text-gray-900 mb-4 block">Couleur : {selectedColor}</label>
-                    <div className="flex gap-3">
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Couleur : {selectedColor}</label>
+                    <div className="flex gap-2">
                       {product.colorVariants.map((variant) => (
                         <button
                           key={variant.colorName}
@@ -305,12 +306,12 @@ useEffect(() => {
                             setSelectedColor(variant.colorName);
                             setCurrentImageIndex(0);
                           }}
-                          className={`w-16 h-16 rounded-xl border-4 transition-all transform hover:scale-110 ${selectedColor === variant.colorName ? 'border-primary shadow-xl scale-110' : 'border-gray-300 hover:border-gray-400'}`}
+                          className={`w-12 h-12 rounded-lg border-3 transition-all transform hover:scale-105 ${selectedColor === variant.colorName ? 'border-primary shadow-lg scale-105' : 'border-gray-300 hover:border-gray-400'}`}
                           style={{ backgroundColor: variant.color }}
                           title={variant.colorName}
                         >
                           {selectedColor === variant.colorName && (
-                            <Check className="h-8 w-8 text-white mx-auto drop-shadow-lg" />
+                            <Check className="h-6 w-6 text-white mx-auto drop-shadow-lg" />
                           )}
                         </button>
                       ))}
@@ -320,13 +321,13 @@ useEffect(() => {
 
                 {product.availableSizes && product.availableSizes.length > 0 && (
                   <div>
-                    <label className="text-lg font-bold text-gray-900 mb-4 block">Taille</label>
-                    <div className="grid grid-cols-5 gap-3">
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Taille</label>
+                    <div className="grid grid-cols-5 gap-2">
                       {product.availableSizes.map((size) => (
                         <button
                           key={size}
                           onClick={() => setSelectedSize(size)}
-                          className={`h-14 rounded-xl font-bold text-lg border-2 transition-all transform hover:scale-105 ${selectedSize === size ? 'bg-primary text-white border-primary shadow-lg scale-105' : 'bg-white text-gray-700 border-gray-300 hover:border-primary'}`}
+                          className={`h-11 rounded-lg font-semibold text-base border-2 transition-all transform hover:scale-105 ${selectedSize === size ? 'bg-primary text-white border-primary shadow-md scale-105' : 'bg-white text-gray-700 border-gray-300 hover:border-primary'}`}
                         >
                           {size}
                         </button>
@@ -336,34 +337,34 @@ useEffect(() => {
                 )}
 
                 <div>
-                  <label className="text-lg font-bold text-gray-900 mb-4 block">Quantité</label>
-                  <div className="flex items-center gap-4">
+                  <label className="text-sm font-semibold text-gray-700 mb-2 block">Quantité</label>
+                  <div className="inline-flex items-center border-2 border-gray-300 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       disabled={isOutOfStock}
-                      className="w-12 h-12 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 rounded-xl flex items-center justify-center"
+                      className="w-10 h-10 bg-white hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center transition-colors border-r border-gray-300"
                     >
-                      <Minus className="h-5 w-5" />
+                      <Minus className="h-4 w-4" />
                     </button>
-                    <span className="text-2xl font-bold text-gray-900 w-16 text-center">{quantity}</span>
+                    <span className="text-lg font-semibold text-gray-900 w-14 text-center bg-gray-50">{quantity}</span>
                     <button
                       onClick={() => setQuantity(quantity + 1)}
                       disabled={isOutOfStock}
-                      className="w-12 h-12 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 rounded-xl flex items-center justify-center"
+                      className="w-10 h-10 bg-white hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center transition-colors border-l border-gray-300"
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-2.5 pt-2">
                   <Button
                     size="lg"
                     onClick={handleBuyNow}
                     disabled={isOutOfStock}
-                    className="w-full h-14 text-lg font-bold"
+                    className="w-full h-12 text-base font-semibold"
                   >
-                    <ShoppingCart className="mr-2 h-6 w-6" />
+                    <ShoppingCart className="mr-2 h-5 w-5" />
                     {isOutOfStock ? "Rupture de stock" : "Acheter maintenant"}
                   </Button>
 
@@ -372,9 +373,9 @@ useEffect(() => {
                     variant="outline"
                     onClick={handleAddToCart}
                     disabled={isOutOfStock}
-                    className="w-full h-14 text-lg font-bold border-2"
+                    className="w-full h-12 text-base font-semibold border-2"
                   >
-                    <ShoppingCart className="mr-2 h-6 w-6" />
+                    <ShoppingCart className="mr-2 h-5 w-5" />
                     Ajouter au panier
                   </Button>
 
@@ -383,47 +384,46 @@ useEffect(() => {
                       <Button
                         size="lg"
                         variant="outline"
-                        className="w-full h-14 text-lg font-bold border-2 border-primary text-primary hover:bg-primary hover:text-white"
+                        className="w-full h-12 text-base font-semibold border-2 border-primary text-primary hover:bg-primary hover:text-white"
                       >
-                        <Sparkles className="mr-2 h-6 w-6" />
+                        <Sparkles className="mr-2 h-5 w-5" />
                         Personnaliser
                       </Button>
                     </Link>
                   )}
 
-                  {/* Bouton WhatsApp */}
                   <Button
                     size="lg"
                     variant="outline"
                     onClick={handleWhatsAppContact}
-                    className="w-full h-14 text-lg font-bold border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                    className="w-full h-12 text-base font-semibold border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
                   >
-                    <MessageCircle className="mr-2 h-6 w-6" />
-                    Contacter via WhatsApp
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Commander via WhatsApp
                   </Button>
 
                   <button
                     onClick={handleShare}
-                    className="w-full h-12 rounded-xl border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold flex items-center justify-center gap-2"
+                    className="w-full h-10 rounded-lg border border-gray-300 hover:border-gray-400 text-gray-700 font-medium flex items-center justify-center gap-2 transition-colors"
                   >
-                    <Share2 className="h-5 w-5" />
+                    <Share2 className="h-4 w-4" />
                     Partager
                   </button>
                 </div>
 
                 <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-white">
-                  <CardContent className="p-6 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-green-600" />
-                      <p className="text-sm text-gray-700">Livraison gratuite </p>
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5" />
+                      <p className="text-sm text-gray-700">Livraison gratuite</p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-green-600" />
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5" />
                       <p className="text-sm text-gray-700">Paiement à la livraison</p>
                     </div>
                     {product.customizable && (
-                      <div className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-600" />
+                      <div className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-600 mt-0.5" />
                         <p className="text-sm text-gray-700">Personnalisation gratuite</p>
                       </div>
                     )}

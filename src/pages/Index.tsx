@@ -138,7 +138,6 @@ const ProductCarousel = () => {
       });
     }
   };
-
   return (
     <section className="py-8 md:py-12 lg:py-16 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
       <div className="container px-3 md:px-4 lg:px-6">
