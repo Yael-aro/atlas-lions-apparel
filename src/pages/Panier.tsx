@@ -403,7 +403,7 @@ toast.success(`Commande ${orderNumber} enregistrée !`, {
               <h2 className="text-2xl font-bold">📋 Vos coordonnées</h2>
               
               <div>
-                <label className="block mb-2 font-semibold text-sm">Nom complet *</label>
+                <label className="block mb-2 font-semibold text-sm">smitk awld97ba *</label>
                 <input 
                   type="text" 
                   value={customerName} 
@@ -414,7 +414,7 @@ toast.success(`Commande ${orderNumber} enregistrée !`, {
               </div>
 
               <div>
-                <label className="block mb-2 font-semibold text-sm">Téléphone *</label>
+                <label className="block mb-2 font-semibold text-sm">telephonk aw9  *</label>
                 <input 
                   type="tel" 
                   value={customerPhone} 

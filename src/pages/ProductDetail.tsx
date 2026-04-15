@@ -173,7 +173,7 @@ const ProductDetail = () => {
         <div className="bg-gray-100 py-4">
           <div className="container px-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Link to="/" className="hover:text-primary transition-colors">Accueil</Link>
+              <Link to="/" className="hover:text-primary transition-colors">zebi</Link>
               <span>/</span>
               <Link to="/boutique" className="hover:text-primary transition-colors">Boutique</Link>
               <span>/</span>
